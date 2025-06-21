@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dr4ke-C2 - Page Not Found">
+    <title>404 - Page Not Found | Dr4ke-C2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#dc2626',
+                        secondary: '#991b1b',
+                        dark: '#1e293b',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        info: '#06b6d4'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            '0%, 100%': { filter: 'drop-shadow(0 0 15px rgba(220, 38, 38, 0.5))' },
+                            '50%': { filter: 'drop-shadow(0 0 30px rgba(220, 38, 38, 0.8))' },
+                        }
+                    }
+                }
+            },
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .neo-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .neo-btn {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .neo-btn:hover {
+            background: rgba(220, 38, 38, 0.2);
+            border-color: rgba(220, 38, 38, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .neo-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg,
+                    transparent,
+                    rgba(220, 38, 38, 0.1),
+                    transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+
+        .neo-btn:hover::after {
+            left: 100%;
+        }
+
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: radial-gradient(circle at center, rgba(220, 38, 38, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(153, 27, 27, 0.15));
+            border-radius: 50%;
+            animation: floatParticle 20s infinite linear;
+        }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.6;
+            }
+
+            90% {
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .error-code {
+            font-size: 12rem;
+            line-height: 1;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.3));
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .logo-glow {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .logo-glow i {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 15px rgba(220, 38, 38, 0.5));
+            }
+
+            50% {
+                filter: drop-shadow(0 0 30px rgba(220, 38, 38, 0.8));
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 text-white min-h-screen flex items-center justify-center">
+    <div class="particles-container"></div>
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="neo-card rounded-2xl p-12 max-w-4xl mx-auto text-center" data-aos="fade-up"
+            data-aos-duration="1000">
+            <div class="error-code mb-8">404</div>
+            <div class="flex items-center justify-center mb-8">
+                <div class="logo-glow">
+                    <i class="fas fa-dragon text-6xl text-primary"></i>
+                </div>
+                <div class="ml-5">
+                    <h1 class="text-4xl font-bold text-white tracking-tight">Dr4ke <span class="text-primary">C2</span>
+                    </h1>
+                    <p class="text-gray-400 text-sm mt-1">Command & Control</p>
+                </div>
+            </div>
+            <h2 class="text-2xl font-semibold mb-4 text-white">Page Not Found</h2>
+            <p class="text-gray-400 mb-8 max-w-lg mx-auto">
+                The page you're looking for doesn't exist or has been moved.
+                Please check the URL or return to login.
+            </p>
+            <div class="flex justify-center">
+                <a href="/" class="neo-btn px-8 py-4 rounded-lg flex items-center text-lg">
+                    <i class="fas fa-sign-in-alt mr-3"></i>
+                    <span>Redirect to Login</span>
+                </a>
+            </div>
+            <div class="mt-12 text-sm text-green-400 animate-pulse-slow">
+                <i class="fas fa-shield-alt mr-2"></i>
+                Powered by caffeine, and open-source code!
+            </div>
+        </div>
+    </div>
+    <script>
+        AOS.init();
+        document.addEventListener('DOMContentLoaded', function () {
+            const container = document.querySelector('.particles-container');
+
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'absolute w-1 h-1 bg-primary/20 rounded-full';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
+                particle.style.background = 'rgba(220, 38, 38, 0.2)';
+                particle.style.boxShadow = '0 0 10px rgba(220, 38, 38, 0.1)';
+                container.appendChild(particle);
+            }
+
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+
+                const size = Math.random() * 15 + 8;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+
+                const duration = Math.random() * 15 + 15;
+                particle.style.animationDuration = `${duration}s`;
+
+                particle.style.animationDelay = `${Math.random() * -30}s`;
+
+                const rotation = Math.random() * 360;
+                particle.style.transform = `rotate(${rotation}deg)`;
+
+                container.appendChild(particle);
+            }
+        });
+    </script>
+</body>
+
+</html>

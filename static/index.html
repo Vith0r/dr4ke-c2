@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dr4ke-C2 Login">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Dr4ke-C2 - Login</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#dc2626',
+                        secondary: '#991b1b',
+                        dark: '#1e293b',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        info: '#06b6d4'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
+                        'slide-up': 'slideUp 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'warning-flash': 'warningFlash 0.5s ease-out',
+                        'alert-pulse': 'alertPulse 2s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(30px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        warningFlash: {
+                            '0%': { 
+                                filter: 'brightness(1)',
+                                backgroundColor: 'rgba(30, 41, 59, 0.7)'
+                            },
+                            '5%': { 
+                                filter: 'brightness(2)',
+                                backgroundColor: 'rgba(220, 38, 38, 0.3)'
+                            },
+                            '20%': { 
+                                filter: 'brightness(1)',
+                                backgroundColor: 'rgba(30, 41, 59, 0.7)'
+                            },
+                            '30%': { 
+                                filter: 'brightness(1.5)',
+                                backgroundColor: 'rgba(220, 38, 38, 0.2)'
+                            },
+                            '100%': { 
+                                filter: 'brightness(1)',
+                                backgroundColor: 'rgba(30, 41, 59, 0.7)'
+                            }
+                        },
+                        alertPulse: {
+                            '0%': { 
+                                boxShadow: '0 0 0 0 rgba(220, 38, 38, 0.4)'
+                            },
+                            '70%': { 
+                                boxShadow: '0 0 0 10px rgba(220, 38, 38, 0)'
+                            },
+                            '100%': { 
+                                boxShadow: '0 0 0 0 rgba(220, 38, 38, 0)'
+                            }
+                        }
+                    }
+                }
+            },
+            darkMode: 'class'
+        }
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+   <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='78' font-family='Arial Black' font-size='85' fill='%23dc2626' text-anchor='middle' font-weight='900'>D</text></svg>">
+
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"></noscript>
+    
+    <link rel="stylesheet" href="/css/main.css?v=1.1">
+    <link rel="stylesheet" href="/css/styles.css?v=1.1">
+    
+    <style>
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.25), rgba(153, 27, 27, 0.25));
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+        .neo-glow {
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.1),
+                        0 0 60px rgba(220, 38, 38, 0.05),
+                        0 0 90px rgba(153, 27, 27, 0.05);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, 
+                rgba(30, 41, 59, 0.8),
+                rgba(30, 41, 59, 0.4)
+            );
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+        .logo-glow {
+            position: relative;
+            display: inline-block;
+        }
+        .logo-glow::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(220, 38, 38, 0.2) 0%,
+                rgba(153, 27, 27, 0) 70%
+            );
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+        .warning-border {
+            animation: warning-flash 2s infinite;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+        }
+        @keyframes warning-flash {
+            0%, 100% { background-color: rgba(220, 38, 38, 0.05); }
+            50% { background-color: rgba(220, 38, 38, 0.1); }
+        }
+        
+        #login-btn {
+            background: linear-gradient(to right, rgba(220, 38, 38, 0.1), rgba(153, 27, 27, 0.1)) !important;
+        }
+        #login-btn:hover {
+            background: linear-gradient(to right, rgba(220, 38, 38, 0.2), rgba(153, 27, 27, 0.2)) !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        #login-btn::after {
+            display: none !important;
+        }
+        
+        .logo-glow:hover .fas.fa-dragon {
+            color: #dc2626 !important;
+            filter: drop-shadow(0 0 10px rgba(220, 38, 38, 0.6)) !important;
+            transition: all 0.3s ease;
+        }
+        .logo-glow .fas.fa-dragon {
+            transition: all 0.3s ease;
+        }
+        .logo-glow:hover::after {
+            background: radial-gradient(circle, 
+                rgba(220, 38, 38, 0.4) 0%,
+                rgba(153, 27, 27, 0.1) 70%
+            ) !important;
+        }
+    </style>
+
+    
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 text-white min-h-screen">
+
+    <div class="particles-container"></div>
+    
+    <div class="fixed inset-0 bg-gray-900/55 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="glass-effect login-card rounded-xl p-8 w-full max-w-md shadow-xl neo-glow warning-border animate-fade-in" data-aos="fade-up" data-aos-duration="800">
+            <div class="flex items-center justify-center mb-8">
+                <div class="logo-glow">
+                    <i class="fas fa-dragon text-6xl text-primary"></i>
+                </div>
+                <div class="ml-5">
+                    <h1 class="text-3xl font-bold text-white tracking-tight">Dr4ke <span class="text-primary">C2</span></h1>
+                    <p class="text-gray-400 text-sm mt-1">Command & Control</p>
+                </div>
+            </div>
+            
+            <div class="login-gradient-divider mb-8"></div>
+            
+            <h2 class="text-xl font-semibold mb-5 text-center text-white">Admin Access</h2>
+            
+            <form id="login-form" class="space-y-5" autocomplete="off">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                        <i class="fas fa-user text-primary/80 text-lg"></i>
+                    </div>
+                    <input type="text" id="username" name="username_prevent_autofill" class="neo-input w-full pl-12 pr-4 py-3 rounded-lg text-base transition-all focus:ring-2 focus:ring-primary" placeholder="Username" autocomplete="new-password" spellcheck="false">
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                        <i class="fas fa-lock text-primary/80 text-lg"></i>
+                    </div>
+                    <input type="password" id="password" name="password_prevent_autofill" class="neo-input w-full pl-12 pr-4 py-3 rounded-lg text-base transition-all focus:ring-2 focus:ring-primary" placeholder="Password" autocomplete="new-password">
+                </div>
+                
+                <div id="login-error" class="text-red-400 text-sm px-1 hidden">
+                    <i class="fas fa-exclamation-circle mr-2"></i>Invalid credentials. Please try again.
+                </div>
+                
+                <button type="submit" id="login-btn" class="group relative overflow-hidden rounded-xl inline-flex items-center justify-center px-6 py-3 w-full transition-all duration-300 text-white font-medium" style="background: linear-gradient(to right, rgba(220, 38, 38, 0.1), rgba(153, 27, 27, 0.1)) !important; border: none;">
+                    <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 animate-pulse"></div>
+                    </div>
+                    <span class="relative flex items-center">
+                        <i class="fas fa-sign-in-alt mr-2 transition-transform duration-300 group-hover:translate-x-1"></i>
+                        <span class="font-medium">Secure Login</span>
+                    </span>
+                </button>
+            </form>
+            
+            <div class="login-gradient-divider my-6"></div>
+            
+            <div class="text-sm text-gray-400 text-center flex items-center justify-center">
+                <i class="fas fa-shield-alt mr-2 text-primary/70"></i>
+                Powered by caffeine, and open-source code!
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js" defer></script>
+    <script src="/js/authentication.js" defer></script>
+    <script src="/js/effects.js" defer></script>
+    <script src="/js/login.js" defer></script>
+    
+    <script>
+        function createParticles() {
+            const container = document.querySelector('.particles-container');
+            const particleCount = 45;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 20 + 10;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                const duration = Math.random() * 15 + 15;
+                particle.style.animationDuration = `${duration}s`;
+                
+                particle.style.animationDelay = `${Math.random() * -30}s`;
+                
+                const rotation = Math.random() * 360;
+                particle.style.transform = `rotate(${rotation}deg)`;
+                
+                container.appendChild(particle);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+        });
+    </script>
+</body>
+</html> 

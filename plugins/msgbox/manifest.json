@@ -1,0 +1,38 @@
+{
+    "name": "msgbox",
+    "version": "1.0.0",
+    "description": "Display message boxes with different styles (info, warning, error)",
+    "author": "Drake C2",
+    "commands": [
+        {
+            "name": "msgbox",
+            "description": "Display a simple message box",
+            "usage": "msgbox [message]",
+            "example": "msgbox Hello World"
+        },
+        {
+            "name": "msgbox_info",
+            "description": "Display an information message box",
+            "usage": "msgbox_info <title> <message>",
+            "example": "msgbox_info Information System is running normally"
+        },
+        {
+            "name": "msgbox_warning",
+            "description": "Display a warning message box",
+            "usage": "msgbox_warning <title> <message>",
+            "example": "msgbox_warning Warning Low disk space detected"
+        },
+        {
+            "name": "msgbox_error",
+            "description": "Display an error message box",
+            "usage": "msgbox_error <title> <message>",
+            "example": "msgbox_error Error Failed to connect to server"
+        }
+    ],
+    "permissions": [
+        "gui_access"
+    ],
+    "os_support": ["windows"],
+    "file_size_kb": 25,
+    "load_time_ms": 100
+}

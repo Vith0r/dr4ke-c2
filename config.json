@@ -1,0 +1,32 @@
+{
+  "server": {
+    "port": "8080",
+    "host": "localhost",
+    "staticFilesPath": "static",
+    "clientLimit": 100000,
+    "readTimeout": 60,
+    "writeTimeout": 60,
+    "idleTimeout": 300,
+    "serverKey": "drake-c2"
+  },
+  "database": {
+    "type": "bolt",
+    "filePath": "server/database/data/clients.db",
+    "cacheSize": 10000,
+    "boltTimeout": 5,
+    "noSync": false
+  },
+  "batch": {
+    "enabled": true,
+    "flushInterval": 500,
+    "maxBatchSize": 200,
+    "queueSize": 5000
+  },
+  "advanced": {
+    "cleanupInterval": 15,
+    "inactivityThreshold": 60,
+    "enableProfiling": false,
+    "maxHeaderBytes": 1048576,
+    "maxTaskExecutionTime": 120
+  }
+}

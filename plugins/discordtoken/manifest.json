@@ -1,0 +1,10 @@
+{
+    "name": "discordtoken",
+    "version": "1.0",
+    "description": "Extract Discord tokens from local storage",
+    "author": "Drake C2",
+    "commands": [
+        "extract",
+        "help"
+    ]
+}
