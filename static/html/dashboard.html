@@ -2252,9 +2252,7 @@
                 console.log(`[TEST] Waiting ${retryDelay}ms before attempt ${attempt + 1}...`);
                 await new Promise(resolve => setTimeout(resolve, retryDelay));
             }
-        }
-
-        function parseAndDisplayProcesses(output) {
+        }        function parseAndDisplayProcesses(output) {
             console.log('[TEST] Parsing process output...');
             console.log('[TEST] Raw output:', output);
 
@@ -2264,9 +2262,11 @@
             let headerFound = false;
             let headerIndex = -1;
 
+            // Look for header line
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
-                if (line.toLowerCase().includes('processid') ||
+                if (line.toLowerCase().includes('name,id,parentprocessid') ||
+                    line.toLowerCase().includes('processid') ||
                     line.toLowerCase().includes('pid') ||
                     line.toLowerCase().includes('name') ||
                     line.includes('Node,Name,ParentPid,Pid')) {
@@ -2284,7 +2284,24 @@
 
                 if (line.includes(',')) {
                     const parts = line.split(',');
-                    if (parts.length >= 4) {
+                    
+                    // Handle our new format: Name,Id,ParentProcessId
+                    if (parts.length >= 3) {
+                        const name = parts[0].trim().replace(/"/g, '');
+                        const pid = parts[1].trim().replace(/"/g, '');
+                        const parentPid = parts[2].trim().replace(/"/g, '');
+                        
+                        if (name && pid && pid !== '' && !isNaN(pid)) {
+                            processes.push({
+                                node: '',
+                                name: name,
+                                parentPid: parentPid || '0',
+                                pid: pid
+                            });
+                        }
+                    }
+                    // Handle legacy wmic format: Node,Name,ParentPid,Pid
+                    else if (parts.length >= 4) {
                         processes.push({
                             node: parts[0].trim(),
                             name: parts[1].trim(),
@@ -2293,12 +2310,13 @@
                         });
                     }
                 } else {
+                    // Handle space-separated format
                     const parts = line.split(/\s+/);
                     if (parts.length >= 2) {
                         processes.push({
                             node: '',
                             name: parts[0],
-                            parentPid: parts.length > 2 ? parts[2] : '',
+                            parentPid: parts.length > 2 ? parts[2] : '0',
                             pid: parts[1]
                         });
                     }

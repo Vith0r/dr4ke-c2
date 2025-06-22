@@ -66,13 +66,14 @@ func (ro *RealisticObfuscator) getCriticalStrings() []string {
 		"dr4ke_uploads",
 		"script_",
 
-		"cmd",
-		"/C",
+		"cmd", "/C",
 		"/register",
 		"/heartbeat",
 		"/tasks",
 		"/result",
 		"wmic",
+		"powershell",
+		"tasklist",
 		"process",
 		"processid",
 
