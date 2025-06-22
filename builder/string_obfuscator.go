@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"time"
 )
 
 type ObfuscatedString struct {
@@ -22,7 +21,6 @@ type StringObfuscator struct {
 }
 
 func NewStringObfuscator() *StringObfuscator {
-	rand.Seed(time.Now().UnixNano())
 	return &StringObfuscator{
 		stringMap: make(map[string]ObfuscatedString),
 		varCount:  0,
@@ -297,20 +295,57 @@ func (so *StringObfuscator) ObfuscateTemplate(templateContent string) string {
 	decryptFunctions := so.generateDecryptFunctions()
 	obfuscatedVars := so.generateObfuscatedVariables()
 
-	importEnd := strings.Index(templateContent, ")")
-	if importEnd == -1 {
-		importEnd = strings.Index(templateContent, "import")
-		if importEnd != -1 {
-			importEnd = strings.Index(templateContent[importEnd:], "\n") + importEnd
-		}
-	} else {
-		importEnd++
+	// Encontrar a posição após a última linha de import
+	importStart := strings.Index(templateContent, "import (")
+	if importStart == -1 {
+		// Se não tem import block, procurar import individual
+		importStart = strings.Index(templateContent, "import ")
 	}
 
-	if importEnd > 0 {
-		templateContent = templateContent[:importEnd] +
-			decryptFunctions + obfuscatedVars +
-			templateContent[importEnd:]
+	var insertPos int
+	if importStart != -1 {
+		// Encontrar o fim da seção de imports
+		remaining := templateContent[importStart:]
+		parenCount := 0
+		inImportBlock := false
+
+		for i, char := range remaining {
+			if char == '(' {
+				parenCount++
+				inImportBlock = true
+			} else if char == ')' && inImportBlock {
+				parenCount--
+				if parenCount == 0 {
+					insertPos = importStart + i + 1
+					// Encontrar próxima linha
+					for insertPos < len(templateContent) && templateContent[insertPos] != '\n' {
+						insertPos++
+					}
+					if insertPos < len(templateContent) {
+						insertPos++ // pular a quebra de linha
+					}
+					break
+				}
+			} else if !inImportBlock && char == '\n' {
+				// Import individual, próxima linha
+				insertPos = importStart + i + 1
+				break
+			}
+		}
+	}
+
+	// Se não encontrou imports, inserir após package declaration
+	if insertPos == 0 {
+		packageEnd := strings.Index(templateContent, "\n")
+		if packageEnd != -1 {
+			insertPos = packageEnd + 1
+		}
+	}
+
+	if insertPos > 0 && insertPos < len(templateContent) {
+		templateContent = templateContent[:insertPos] + "\n" +
+			decryptFunctions + "\n" + obfuscatedVars + "\n" +
+			templateContent[insertPos:]
 	}
 	for original, obf := range so.stringMap {
 		templateContent = strings.ReplaceAll(templateContent,

@@ -1,0 +1,139 @@
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Temporary build files
+builds/
+temp/
+tmp/
+
+# Sensitive configuration files
+auth-token.json
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+server/database/data/
+database/data/
+
+# Logs
+*.log
+logs/
+
+# Temporary system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Go specific
+# Dependency files
+vendor/
+go.work
+go.work.sum
+
+# Test files
+*.test
+*.prof
+coverage.out
+coverage.html
+
+# Go build files
+*.o
+*.a
+*.so
+
+# Temporary build files
+/builder/template/temp/
+/builder/temp/
+
+# Uploads and temporary files
+uploads/
+dr4ke_uploads/
+temp_*
+script_*
+
+# Certificates and keys
+*.crt
+*.cert
+*.key
+*.pem
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Windows system files
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux/Mac system files
+.Trash-*
+
+# Python (for auxiliary scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.Python
+env/
+venv/
+ENV/
+
+# Node.js (if there are JS dependencies)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sensitive screenshots (keep only examples)
+Screenshots/sensitive/
+Screenshots/*client*
+Screenshots/*victim*
+
+# Compiled plugins
+plugins/**/*.dll
+plugins/**/*.so
+plugins/**/*.dylib
+!plugins/**/manifest.json
+!plugins/**/*.go
+!plugins/**/*.h
+
+# Test files
+test_build.py
+test_*
+*_test_*
+
+# Releases and distribution
+release/
+dist/
+packages/
